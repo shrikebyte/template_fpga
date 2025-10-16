@@ -1,0 +1,14 @@
+.Xil
+*.jou
+*.log
+*.str
+*.rpt
+*.dmp
+.vscode
+build/
+vunit_out/
+regs_out/
+vivado_out/
+coverage_data
+coverage.txt
+__pycache__

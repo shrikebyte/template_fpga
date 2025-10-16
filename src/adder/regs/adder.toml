@@ -1,0 +1,47 @@
+################################################################################
+# File : adder.toml
+# Auth : David Gussler
+# Lang : HDL-Registers TOML
+#        https://hdl-registers.com/rst/user_guide/getting_started.html
+# ==============================================================================
+# Registers for the adder
+################################################################################
+
+
+################################################################################
+[a]
+mode = "r_w"
+description = "Operand a."
+
+[a.data]
+type = "bit_vector"
+width = 32
+description = """
+Operand a.
+"""
+
+
+################################################################################
+[b]
+mode = "r_w"
+description = "Operand b."
+
+[b.data]
+type = "bit_vector"
+width = 32
+description = """
+Operand b.
+"""
+
+
+################################################################################
+[c]
+mode = "r"
+description = "Result c."
+
+[c.data]
+type = "bit_vector"
+width = 32
+description = """
+Result c.
+"""
