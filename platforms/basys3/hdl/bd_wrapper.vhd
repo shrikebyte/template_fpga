@@ -21,10 +21,10 @@ entity bd_wrapper is
     m_axil_req : out   axil_req_t;
     m_axil_rsp : in    axil_rsp_t;
     --
-    fpga_clk_100m: in    std_logic;
-    fpga_arst    : in    std_logic;
-    uart_rxd : in    std_logic;
-    uart_txd : out   std_logic
+    fpga_clk_100m : in    std_logic;
+    fpga_arst     : in    std_logic;
+    uart_rxd      : in    std_logic;
+    uart_txd      : out   std_logic
   );
 end entity;
 
@@ -53,8 +53,8 @@ architecture rtl of bd_wrapper is
       m_axil_rvalid  : in    std_logic;
       m_axil_rready  : out   std_logic;
       srst_100m      : out   std_logic_vector( 0 to 0);
-          fpga_clk_100m: in    std_logic;
-    fpga_arst    : in    std_logic;
+      fpga_clk_100m  : in    std_logic;
+      fpga_arst      : in    std_logic;
       uart_rxd       : in    std_logic;
       uart_txd       : out   std_logic
     );
@@ -87,10 +87,10 @@ begin
     m_axil_wstrb   => m_axil_req.wstrb,
     m_axil_wvalid  => m_axil_req.wvalid,
     --
-    fpga_clk_100m =>     fpga_clk_100m,
-    fpga_arst     =>     fpga_arst    ,
-    uart_rxd => uart_rxd,
-    uart_txd => uart_txd
+    fpga_clk_100m => fpga_clk_100m,
+    fpga_arst     => fpga_arst,
+    uart_rxd      => uart_rxd,
+    uart_txd      => uart_txd
   );
 
 end architecture;

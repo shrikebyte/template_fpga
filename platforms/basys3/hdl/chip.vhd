@@ -26,10 +26,10 @@ entity chip is
     G_BUILD_TIME  : std_logic_vector(23 downto 0) := x"DEAD_BE"
   );
   port (
-    i_fpga_clk_100m : in std_logic;
-    i_fpga_arst : in std_logic;
-    i_uart_rxd : in    std_logic;
-    o_uart_txd : out   std_logic
+    i_fpga_clk_100m : in    std_logic;
+    i_fpga_arst     : in    std_logic;
+    i_uart_rxd      : in    std_logic;
+    o_uart_txd      : out   std_logic
   );
 end entity;
 
@@ -49,14 +49,14 @@ begin
   -- ---------------------------------------------------------------------------
   u_bd_wrapper : entity work.bd_wrapper
   port map (
-    clk_100m   => clk_100m,
-    srst_100m  => srst_100m,
-    m_axil_req => axil_req_bd,
-    m_axil_rsp => axil_rsp_bd,
+    clk_100m      => clk_100m,
+    srst_100m     => srst_100m,
+    m_axil_req    => axil_req_bd,
+    m_axil_rsp    => axil_rsp_bd,
     fpga_clk_100m => i_fpga_clk_100m,
     fpga_arst     => i_fpga_arst,
-    uart_rxd   => i_uart_rxd,
-    uart_txd   => o_uart_txd
+    uart_rxd      => i_uart_rxd,
+    uart_txd      => o_uart_txd
   );
 
   -- ---------------------------------------------------------------------------
