@@ -10,21 +10,14 @@
 # Configuration Settings
 ################################################################################
 
-# Select the target hardware platform. Must match one of the directories in 
-# "platforms".
-PLATFORM ?= kv260
-
-# FPGA Version
+# FPGA Project Version
 # Use semantic versioning with respect to the register API. Each version 
 # variable may range from 0 to 255.
 # Update the version and add appropriate notes to the CHANGELOG.md each time 
-# a new FPGA binary is released to the field.
+# a new tag is released
 VER_MAJOR := 0
 VER_MINOR := 1
 VER_PATCH := 0
-
-# Number of processor threads to use for builds
-JOBS ?= 16
 
 # Required project build tool versions
 REQUIRE_VIVADO_VER := v2024.2
@@ -33,13 +26,42 @@ REQUIRE_VSG_VER    := 3.30.0
 REQUIRE_VUNIT_VER  := 5.0.0.dev6
 
 
+# Select the target hardware platform to build. Must match one of the
+# directories in "platforms". This variable can be set from the command line,
+# for example "make PLATFORM=basys3". Running "make all" will automatically find
+# and make all of the target platforms.
+PLATFORM ?= basys3
+
+# Number of processor threads to use for builds
+JOBS ?= 16
+
+
 
 ################################################################################
 # Rules
 ################################################################################
 
+# Check a Python package version
+define check_python_pkg_ver
+	@v=$$(python -m pip show $(1) 2>/dev/null | awk '/Version:/ {print $$2}'); \
+	if [ "$$v" != "$($(2))" ]; then \
+		echo "ERROR: Requires $(1) version $($(2)) (found $$v)"; \
+		exit 1; \
+	fi
+endef
+
+# Check the Vivado version
+define check_vivado_ver
+	@v=$$(vivado -version | awk '/vivado/ {print $$2; exit}'); \
+	if [ "$$v" != "$(REQUIRE_VIVADO_VER)" ]; then \
+		echo "ERROR: Requires Vivado $(REQUIRE_VIVADO_VER) (found $$v)"; \
+		exit 1; \
+	fi
+endef
+
 MAKEFILE_DIR := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
 PROJECT_NAME := $(notdir $(patsubst %/,%,$(MAKEFILE_DIR)))
+PLATFORM_LIST := $(notdir $(wildcard platforms/*))
 SRC_DIR := $(MAKEFILE_DIR)src
 TEST_DIR := $(MAKEFILE_DIR)test
 BUILD_DIR := $(MAKEFILE_DIR)build
@@ -47,7 +69,7 @@ DOC_DIR := $(MAKEFILE_DIR)doc
 LIB_DIR := $(MAKEFILE_DIR)lib
 PLATS_DIR := $(MAKEFILE_DIR)platforms
 VER_STRING := v$(VER_MAJOR).$(VER_MINOR).$(VER_PATCH)
-BUILD_NAME := $(PROJECT_NAME)_v$(VER_STRING)-$(PLATFORM)
+BUILD_NAME := $(PROJECT_NAME)_$(VER_STRING)-$(PLATFORM)
 RELEASE_DIR := $(BUILD_DIR)/$(BUILD_NAME)
 REGS_SRC := $(SRC_DIR)/*/regs/*.toml $(LIB_DIR)/sblib-open/src/*/regs/*.toml
 STYLE_SRC := $(SRC_DIR)/*/hdl/*.vhd $(PLATS_DIR)/*/hdl/*.vhd $(TEST_DIR)/*/*.vhd
@@ -56,48 +78,39 @@ STYLE_SRC := $(SRC_DIR)/*/hdl/*.vhd $(PLATS_DIR)/*/hdl/*.vhd $(TEST_DIR)/*/*.vhd
 include $(PLATS_DIR)/$(PLATFORM)/platform.mk
 
 # Phony rules
-.PHONY: package build release lint proj sim regs style style-fix tool-check clean update-libs all full
+.PHONY: package build release lint proj sim regs style style-fix tool-check clean update-libs all
 
-# # Run the complete build procedure for ALL platforms
-# all:
 
-# # Run the complete build procedure for the specified platform
-# full:
+# Run the complete build procedure for ALL platforms
+all:
+	$(MAKE) tool-check
+	@{ \
+	for plat in $(PLATFORM_LIST); do \
+		$(MAKE) proj PLATFORM=$${plat} JOBS=$(JOBS); \
+		$(MAKE) build PLATFORM=$${plat} JOBS=$(JOBS); \
+		$(MAKE) package PLATFORM=$${plat} JOBS=$(JOBS); \
+	done; \
+	}	
 
 # If this passes, then your environment is configured correctly
 tool-check:
-	@if [ $(shell vivado -version | grep vivado | awk '{print $$2}') != $(REQUIRE_VIVADO_VER) ]; then \
-		echo "ERROR: Requires Vivado $(REQUIRE_VIVADO_VER)"; \
-		exit 1; \
-	fi
-
-	@if [ $(shell python -m pip show hdl_registers | grep Version: | awk '{print $$2}') != $(REQUIRE_REGS_VER) ]; then \
-		echo "ERROR: Requires hdl_registers $(REQUIRE_REGS_VER)"; \
-		exit 1; \
-	fi
-
-	@if [ $(shell python -m pip show vsg | grep Version: | awk '{print $$2}') != $(REQUIRE_VSG_VER) ]; then \
-		echo "ERROR: Requires vsg $(REQUIRE_VSG_VER)"; \
-		exit 1; \
-	fi
-
-	@if [ $(shell python -m pip show vunit_hdl | grep Version: | awk '{print $$2}') != $(REQUIRE_VUNIT_VER) ]; then \
-		echo "ERROR: Requires vunit_hdl $(REQUIRE_VUNIT_VER)"; \
-		exit 1; \
-	fi
+	@echo "INFO: Checking tools..."
+	$(call check_vivado_ver)
+	$(call check_python_pkg_ver,hdl_registers,REQUIRE_REGS_VER)
+	$(call check_python_pkg_ver,vsg,REQUIRE_VSG_VER)
+	$(call check_python_pkg_ver,vunit_hdl,REQUIRE_VUNIT_VER)
 	@echo "INFO: Tool check passed."
 
 # Package the built files
 package: regs
 	cd $(BUILD_DIR) && tar -czvf $(BUILD_NAME).tar.gz $(BUILD_NAME)
 
-
 update-libs:
 	git subtree pull --prefix lib/sblib-open https://github.com/shrikebyte/sblib-open.git main --squash
 
 # Build the FPGA with Vivado
 build: regs
-	cd tools && vivado -mode batch -nojournal -nolog -notrace -source build.tcl -tclargs $(PROJECT_NAME) $(PLATFORM) $(DEVICE_ID) $(VER_MAJOR) $(VER_MINOR) $(VER_PATCH) $(JOBS)
+	cd tools && vivado -mode batch -nojournal -nolog -notrace -source build.tcl -tclargs $(PROJECT_NAME) $(PLATFORM) $(PLATFORM_DEVICE_ID) $(VER_MAJOR) $(VER_MINOR) $(VER_PATCH) $(JOBS)
 
 # Create the FPGA Vivado project
 proj: regs
@@ -150,5 +163,3 @@ release:
 
 clean:
 	rm -rf build
-
-

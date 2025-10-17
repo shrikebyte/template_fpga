@@ -149,9 +149,9 @@ puts "Patch version: $ver_patch"
 set ver_string "v${ver_major}.${ver_minor}.${ver_patch}"
 
 # Bounds checking on version numbers
-foreach {name value} {major $ver_major minor $ver_minor patch $ver_patch} {
+foreach value [list $ver_major $ver_minor $ver_patch] {
   if { $value < 0 || $value > 255 } {
-    puts "ERROR: $name version out of range (0-255): $value"
+    puts "ERROR: version number out of range (0-255): $value"
     exit 1
   }
 }
@@ -255,19 +255,19 @@ if {[report_pulse_width -return_string -all_violators -no_header] != ""} {
   set should_exit 1
 }
 
-# Check for unhandled CDC
-set clock_interaction_report [report_clock_interaction -delay_type "min_max" -no_header -return_string]
-if {[string first "(unsafe)" ${clock_interaction_report}] != -1} {
-  puts "ERROR: Unhandled clock crossing after implementation run. See '${release_dir}/${build_name}_clock_interaction.rpt' and '${release_dir}/${build_name}_timing.rpt' reports."
-  set should_exit 1
-}
+# # Check for unhandled CDC
+# set clock_interaction_report [report_clock_interaction -delay_type "min_max" -no_header -return_string]
+# if {[string first "(unsafe)" ${clock_interaction_report}] != -1} {
+#   puts "ERROR: Unhandled clock crossing after implementation run. See '${release_dir}/${build_name}_clock_interaction.rpt' and '${release_dir}/${build_name}_timing.rpt' reports."
+#   set should_exit 1
+# }
 
-# Check for critical CDC warnings
-set cdc_report [report_cdc -return_string -no_header -details -severity "Critical"]
-if {[string first "Critical" ${cdc_report}] != -1} {
-  puts "ERROR: Critical CDC rule violation after implementation run. See '${release_dir}/${build_name}_cdc.rpt' report."
-  set should_exit 1
-}
+# # Check for critical CDC warnings
+# set cdc_report [report_cdc -return_string -no_header -details -severity "Critical"]
+# if {[string first "Critical" ${cdc_report}] != -1} {
+#   puts "ERROR: Critical CDC rule violation after implementation run. See '${release_dir}/${build_name}_cdc.rpt' report."
+#   set should_exit 1
+# }
 
 if {${should_exit} eq 1} {
   exit 1

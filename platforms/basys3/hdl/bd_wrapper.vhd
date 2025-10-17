@@ -11,19 +11,20 @@ use ieee.std_logic_1164.all;
 
 library unisim;
 use unisim.vcomponents.all;
-
 use work.util_pkg.all;
 
 entity bd_wrapper is
   port (
-    clk_100m       : out   std_logic;
-    srst_100m      : out   std_logic;
+    clk_100m  : out   std_logic;
+    srst_100m : out   std_logic;
     --
-    m_axil_req     : out   axil_req_t;
-    m_axil_rsp     : in    axil_rsp_t;
+    m_axil_req : out   axil_req_t;
+    m_axil_rsp : in    axil_rsp_t;
     --
-    uart_rxd       : in    std_logic;
-    uart_txd       : out   std_logic
+    fpga_clk_100m: in    std_logic;
+    fpga_arst    : in    std_logic;
+    uart_rxd : in    std_logic;
+    uart_txd : out   std_logic
   );
 end entity;
 
@@ -52,6 +53,8 @@ architecture rtl of bd_wrapper is
       m_axil_rvalid  : in    std_logic;
       m_axil_rready  : out   std_logic;
       srst_100m      : out   std_logic_vector( 0 to 0);
+          fpga_clk_100m: in    std_logic;
+    fpga_arst    : in    std_logic;
       uart_rxd       : in    std_logic;
       uart_txd       : out   std_logic
     );
@@ -61,31 +64,33 @@ begin
 
   u_bd : component bd
   port map (
-    clk_100m      => clk_100m,
-    srst_100m(0)  => srst_100m,
+    clk_100m     => clk_100m,
+    srst_100m(0) => srst_100m,
     --
-    m_axil => m_axil_req.araddr,
-    m_axil => m_axil_req.arprot,
-    m_axil => m_axil_rsp.arready,
-    m_axil => m_axil_req.arvalid,
-    m_axil => m_axil_req.awaddr,
-    m_axil => m_axil_req.awprot,
-    m_axil => m_axil_rsp.awready,
-    m_axil => m_axil_req.awvalid,
-    m_axil => m_axil_req.bready,
-    m_axil => m_axil_rsp.bresp,
-    m_axil => m_axil_rsp.bvalid,
-    m_axil => m_axil_rsp.rdata,
-    m_axil => m_axil_req.rready,
-    m_axil => m_axil_rsp.rresp,
-    m_axil => m_axil_rsp.rvalid,
-    m_axil => m_axil_req.wdata,
-    m_axil => m_axil_rsp.wready,
-    m_axil => m_axil_req.wstrb,
-    m_axil => m_axil_req.wvalid,
+    m_axil_araddr  => m_axil_req.araddr,
+    m_axil_arprot  => m_axil_req.arprot,
+    m_axil_arready => m_axil_rsp.arready,
+    m_axil_arvalid => m_axil_req.arvalid,
+    m_axil_awaddr  => m_axil_req.awaddr,
+    m_axil_awprot  => m_axil_req.awprot,
+    m_axil_awready => m_axil_rsp.awready,
+    m_axil_awvalid => m_axil_req.awvalid,
+    m_axil_bready  => m_axil_req.bready,
+    m_axil_bresp   => m_axil_rsp.bresp,
+    m_axil_bvalid  => m_axil_rsp.bvalid,
+    m_axil_rdata   => m_axil_rsp.rdata,
+    m_axil_rready  => m_axil_req.rready,
+    m_axil_rresp   => m_axil_rsp.rresp,
+    m_axil_rvalid  => m_axil_rsp.rvalid,
+    m_axil_wdata   => m_axil_req.wdata,
+    m_axil_wready  => m_axil_rsp.wready,
+    m_axil_wstrb   => m_axil_req.wstrb,
+    m_axil_wvalid  => m_axil_req.wvalid,
     --
-    uart_rxd  => uart_rxd,
-    uart_txd  => uart_txd
+    fpga_clk_100m =>     fpga_clk_100m,
+    fpga_arst     =>     fpga_arst    ,
+    uart_rxd => uart_rxd,
+    uart_txd => uart_txd
   );
 
 end architecture;
