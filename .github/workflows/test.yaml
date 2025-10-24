@@ -60,7 +60,6 @@ jobs:
 
     - name: Run simulation
       run: |
-        make tool-check
         make sim
 
     - name: Archive simulation results
@@ -93,7 +92,6 @@ jobs:
 
     - name: Run style check
       run: |
-        make tool-check
         make style
 
     - name: Archive simulation results
