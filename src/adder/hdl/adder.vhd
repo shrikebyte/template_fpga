@@ -15,8 +15,8 @@ use work.adder_register_record_pkg.all;
 
 entity adder is
   port (
-    clk        : std_logic;
-    srst       : std_logic;
+    clk        : in    std_logic;
+    srst       : in    std_logic;
     s_axil_req : in    axil_req_t;
     s_axil_rsp : out   axil_rsp_t
   );
