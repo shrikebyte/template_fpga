@@ -10,6 +10,8 @@
 # Configuration Settings
 ################################################################################
 
+PROJECT_NAME := template_fpga
+
 # FPGA Project Version
 # Use semantic versioning with respect to the register API. Each version 
 # variable may range from 0 to 255.
@@ -60,7 +62,6 @@ define check_vivado_ver
 endef
 
 MAKEFILE_DIR := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
-PROJECT_NAME := $(notdir $(patsubst %/,%,$(MAKEFILE_DIR)))
 PLATFORM_LIST := $(notdir $(wildcard platforms/*))
 SRC_DIR := $(MAKEFILE_DIR)src
 TEST_DIR := $(MAKEFILE_DIR)test
