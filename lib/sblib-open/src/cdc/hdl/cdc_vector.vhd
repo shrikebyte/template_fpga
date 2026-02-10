@@ -1,9 +1,17 @@
 --#############################################################################
 --# File : cdc_vector.vhd
 --# Auth : David Gussler
---# Lang : VHDL '08
+--# ============================================================================
+--# Shrikebyte VHDL Library - https://github.com/shrikebyte/sblib
+--# Copyright (C) Shrikebyte, LLC
+--# Licensed under the Apache 2.0 license, see LICENSE for details.
 --# ===========================================================================
---! Handshake vector synchronizer based on AXIS
+--# Handshake vector synchronizer based on AXIS. If sync'ing counters, it is
+--# recommended to use cdc_gray for lower resource utilization and lower
+--# latency.
+--# If syncing a slowly changing non-axis vector, such as a software-accessible
+--# control or status vector, it is allowed to tie src_valid and dst_ready
+--# high.
 --#############################################################################
 
 library ieee;
@@ -11,94 +19,91 @@ use ieee.std_logic_1164.all;
 
 entity cdc_vector is
   generic (
-    --! Number of synchronizer flip-flops
-    G_SYNC_LEN : positive := 2;
-    -- Data width
-    G_WIDTH : positive := 8
+    G_EXTRA_SYNC : natural := 0
   );
   port (
-    -- Slave port
-    s_clk   : in    std_logic;
-    s_valid : in    std_logic;
-    s_ready : out   std_logic := '0';
-    s_data  : in    std_logic_vector(G_WIDTH - 1 downto 0);
-    -- Master port
-    m_clk   : in    std_logic;
-    m_valid : out   std_logic := '0';
-    m_ready : in    std_logic;
-    m_data  : out   std_logic_vector(G_WIDTH - 1 downto 0)
+    src_clk   : in    std_ulogic;
+    src_ready : out   std_ulogic := '1';
+    src_valid : in    std_ulogic := '1';
+    src_data  : in    std_ulogic_vector;
+    --
+    dst_clk   : in    std_ulogic;
+    dst_ready : in    std_ulogic := '1';
+    dst_valid : out   std_ulogic := '0';
+    dst_data  : out   std_ulogic_vector
   );
 end entity;
 
 architecture rtl of cdc_vector is
 
-  -- ---------------------------------------------------------------------------
-  signal s_valid_ff    : std_logic;
-  signal s_ready_ff    : std_logic;
-  signal s_data_ff     : std_logic_vector(G_WIDTH - 1 downto 0);
-  signal src_req_pulse : std_logic;
-  signal src_ack_pulse : std_logic;
-  signal dst_req_pulse : std_logic;
-  signal dst_ack_pulse : std_logic;
+  constant DW : natural := src_data'length;
+
+  signal src_xact      : std_ulogic;
+  signal src_data_reg  : std_ulogic_vector(DW - 1 downto 0);
+  signal src_req_pulse : std_ulogic := '0';
+  signal src_ack_pulse : std_ulogic;
+  signal dst_req_pulse : std_ulogic;
+  signal dst_ack_pulse : std_ulogic;
 
 begin
 
-  -- Registers to help determine if a new request is active
-  prc_new_request : process (s_clk) is begin
-    if rising_edge(s_clk) then
-      s_valid_ff <= s_valid;
-      s_ready_ff <= s_ready;
-      s_data_ff  <= s_data;
+  -- Detect a new request & register the input data
+  prc_new_request : process (src_clk) is begin
+    if rising_edge(src_clk) then
+      src_req_pulse <= src_xact;
+
+      if src_xact then
+        src_data_reg <= src_data;
+        src_ready    <= '0';
+      elsif src_ack_pulse then
+        src_ready <= '1';
+      end if;
+
     end if;
   end process;
 
-  -- New request if rising edge of valid or new valid after previous ready
-  src_req_pulse <= (s_valid and not s_valid_ff) or (s_valid and s_ready_ff);
+  src_xact <= src_valid and src_ready;
 
   -- CDC the request to the destination domain
   u_cdc_pulse_req : entity work.cdc_pulse
   generic map (
-    G_SYNC_LEN => G_SYNC_LEN,
-    G_WIDTH    => 1
+    G_EXTRA_SYNC   => G_EXTRA_SYNC,
+    G_USE_FEEDBACK => false
   )
   port map (
-    src_clk      => s_clk,
-    src_pulse(0) => src_req_pulse,
-    dst_clk      => m_clk,
-    dst_pulse(0) => dst_req_pulse
+    src_clk   => src_clk,
+    src_pulse => src_req_pulse,
+    dst_clk   => dst_clk,
+    dst_pulse => dst_req_pulse
   );
 
   -- Hold destination valid high until destination is ready to accept
   -- transaction
-  prc_hold_valid : process (m_clk) is begin
-    if rising_edge(m_clk) then
+  prc_hold_valid : process (dst_clk) is begin
+    if rising_edge(dst_clk) then
       if dst_req_pulse then
-        m_valid <= '1';
-        m_data  <= s_data_ff;
+        dst_valid <= '1';
+        dst_data  <= src_data_reg;
       elsif dst_ack_pulse then
-        m_valid <= '0';
+        dst_valid <= '0';
       end if;
     end if;
   end process;
 
   -- Ack when a valid transaction has completed
-  dst_ack_pulse <= m_valid and m_ready;
+  dst_ack_pulse <= dst_valid and dst_ready;
 
   -- CDC the acknowledge back to the source domain
   u_cdc_pulse_ack : entity work.cdc_pulse
   generic map (
-    G_SYNC_LEN => G_SYNC_LEN,
-    G_WIDTH    => 1
+    G_EXTRA_SYNC   => G_EXTRA_SYNC,
+    G_USE_FEEDBACK => false
   )
   port map (
-    src_clk      => m_clk,
-    src_pulse(0) => dst_ack_pulse,
-    dst_clk      => s_clk,
-    dst_pulse(0) => src_ack_pulse
+    src_clk   => dst_clk,
+    src_pulse => dst_ack_pulse,
+    dst_clk   => src_clk,
+    dst_pulse => src_ack_pulse
   );
-
-  -- Source can advance to the next transaction once the ack has been cdc'd
-  -- from the dest back to the source.
-  s_ready <= src_ack_pulse;
 
 end architecture;

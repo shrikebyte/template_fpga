@@ -1,44 +1,44 @@
 --##############################################################################
 --# File : ebtb_decode.vhd
 --# Auth : Chuck Benz, Frans Schreuder, with modifications by David Gussler
---# Lang : VHDL '08
 --# ============================================================================
---! Copyright 2002    Chuck Benz, Hollis, NH
---! Copyright 2020    Frans Schreuder
---!
---! Licensed under the Apache License, Version 2.0 (the "License");
---! you may not use this file except in compliance with the License.
---! You may obtain a copy of the License at
---!
---!     http://www.apache.org/licenses/LICENSE-2.0
---!
---! Unless required by applicable law or agreed to in writing, software
---! distributed under the License is distributed on an "AS IS" BASIS,
---! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
---! See the License for the specific language governing permissions and
---! limitations under the License.
---!
---! The information and description contained herein is the
---! property of Chuck Benz.
---!
---! Permission is granted for any reuse of this information
---! and description as long as this copyright notice is
---! preserved.  Modifications may be made as long as this
---! notice is preserved.
---!
---! Changelog:
---! 11 October  2002: Chuck Benz:
---!   - updated with clearer messages, and checking decodeout
---!
---! 3  November 2020: Frans Schreuder:
---!   - Translated to VHDL, added UVVM testbench
---!   - Original verilog code: http://asics.chuckbenz.com/#My_open_source_8b10b_encoderdecoder
---!
---! 8  January  2025: David Gussler:
---!   - Renamed module, code style update, changed reset to synchronous
---!   - Original VHDL code: https://github.com/fransschreuder/8b10b_VHDL
---!
---! per Widmer and Franaszek
+--# Copyright 2002    Chuck Benz, Hollis, NH
+--# Copyright 2020    Frans Schreuder
+--#
+--# Licensed under the Apache License, Version 2.0 (the "License");
+--# you may not use this file except in compliance with the License.
+--# You may obtain a copy of the License at
+--#
+--#     http://www.apache.org/licenses/LICENSE-2.0
+--#
+--# Unless required by applicable law or agreed to in writing, software
+--# distributed under the License is distributed on an "AS IS" BASIS,
+--# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+--# See the License for the specific language governing permissions and
+--# limitations under the License.
+--#
+--# The information and description contained herein is the
+--# property of Chuck Benz.
+--#
+--# Permission is granted for any reuse of this information
+--# and description as long as this copyright notice is
+--# preserved.  Modifications may be made as long as this
+--# notice is preserved.
+--# ============================================================================
+--# Changelog:
+--# 11 October  2002: Chuck Benz:
+--#   - updated with clearer messages, and checking decodeout
+--#
+--# 3  November 2020: Frans Schreuder:
+--#   - Translated to VHDL, added UVVM testbench
+--#   - Original verilog code:
+--#     http://asics.chuckbenz.com/#My_open_source_8b10b_encoderdecoder
+--#
+--# 8  January  2025: David Gussler:
+--#   - Renamed module, code style update, changed reset to synchronous
+--#   - Original VHDL code: https://github.com/fransschreuder/8b10b_VHDL
+--#
+--# per Widmer and Franaszek
 --##############################################################################
 
 library ieee;
@@ -139,24 +139,29 @@ begin
 
   aeqb <= (ai and bi) or (not ai and not bi);
   ceqd <= (ci and di) or (not ci and not di);
-  p22  <= (ai and bi and not ci and not di) or
-          (ci and di and not ai and not bi) or
-          (not aeqb and not ceqd);
-  p13  <= (not aeqb and not ci and not di) or
-          (not ceqd and not ai and not bi);
-  p31  <= (not aeqb and ci and di) or
-          (not ceqd and ai and bi);
+
+  p22 <= (ai and bi and not ci and not di) or
+    (ci and di and not ai and not bi) or
+    (not aeqb and not ceqd);
+
+  p13 <= (not aeqb and not ci and not di) or (not ceqd and not ai and not bi);
+  p31 <= (not aeqb and ci and di) or (not ceqd and ai and bi);
 
   disp6a  <= p31 or (p22 and dispin); -- pos disp if p22 and was pos, or p31.
   disp6a2 <= p31 and dispin;          -- disp is ++ after 4 bits
-  disp6a0 <= p13 and not  dispin;     -- -- disp after 4 bits
+  disp6a0 <= p13 and not  dispin;     -- disp after 4 bits
 
-  disp6b <= (((ei and ii and not  disp6a0) or (disp6a and (ei or ii)) or disp6a2 or
-               (ei and ii and di)) and (ei or ii or di)
-            );
+  disp6b <= (
+    (
+      (ei and ii and not  disp6a0) or
+      (disp6a and (ei or ii)) or
+      disp6a2 or
+      (ei and ii and di)
+    ) and
+    (ei or ii or di)
+  );
 
   -- The 5B/6B decoding special cases where ABCDE not <= abcde
-
   p22bceeqi   <= p22 and bi and ci and (not (ei xor ii));
   p22bncneeqi <= p22 and not bi and not ci and (not (ei xor ii));
   p13in       <= p13 and not ii;
@@ -189,33 +194,51 @@ begin
   feqg    <= (fi and gi) or (not fi and not gi);
   heqj    <= (hi and ji) or (not hi and not ji);
   fghj22  <= (fi and gi and not hi and not ji) or
-             (not fi and not gi and hi and ji) or
-             (not feqg and not heqj);
+    (not fi and not gi and hi and ji) or
+    (not feqg and not heqj);
   fghjp13 <= (not feqg and not hi and not ji) or
-              (not heqj and not fi and not gi);
+    (not heqj and not fi and not gi);
   fghjp31 <= ((not feqg) and hi and ji) or
-              (not heqj and fi and gi);
+    (not heqj and fi and gi);
 
   dispout <= (fghjp31 or (disp6b and fghj22) or (hi and ji)) and (hi or ji);
 
-  ko_s <= ((ci and di and ei and ii) or (not ci and not di and not ei and not ii) or
-            (p13 and not ei and ii and gi and hi and ji) or
-            (p31 and ei and not ii and not gi and not hi and not ji)
-          );
+  ko_s <= (
+    (ci and di and ei and ii) or
+    (not ci and not di and not ei and not ii) or
+    (p13 and not ei and ii and gi and hi and ji) or
+    (p31 and ei and not ii and not gi and not hi and not ji)
+  );
 
   -- k28 with positive disp into fghi - .1, .2, .5, and .6 special cases
-  k28p <= not  (ci or di or ei or ii);
-  fo   <= (ji and not fi and (hi or not gi or k28p)) or
-         (fi and not ji and (not hi or gi or not k28p)) or
-         (k28p and gi and hi) or
-         (not k28p and not gi and not hi);
-  go   <= (ji and not fi and (hi or not gi or not k28p)) or
-         (fi and not ji and (not hi or gi or k28p)) or
-         (not k28p and gi and hi) or
-         (k28p and not gi and not hi);
-  ho   <= ((ji xor hi) and not  ((not fi and gi and not hi and ji and not k28p) or (not fi and gi and hi and not ji and k28p) or
-         (fi and not gi and not hi and ji and not k28p) or (fi and not gi and hi and not ji and k28p))) or
-         (not fi and gi and hi and ji) or (fi and not gi and not hi and not ji);
+  k28p <= not (ci or di or ei or ii);
+
+  fo <= (
+    (ji and not fi and (hi or not gi or k28p)) or
+    (fi and not ji and (not hi or gi or not k28p)) or
+    (k28p and gi and hi) or
+    (not k28p and not gi and not hi)
+  );
+
+  go <= (
+    (ji and not fi and (hi or not gi or not k28p)) or
+    (fi and not ji and (not hi or gi or k28p)) or
+    (not k28p and gi and hi) or
+    (k28p and not gi and not hi)
+  );
+
+  ho <= (
+    (
+      (ji xor hi) and not (
+        (not fi and gi and not hi and ji and not k28p) or
+        (not fi and gi and hi and not ji and k28p) or
+        (fi and not gi and not hi and ji and not k28p) or
+        (fi and not gi and hi and not ji and k28p)
+      )
+    ) or
+    (not fi and gi and hi and ji) or
+    (fi and not gi and not hi and not ji)
+  );
 
   disp6p <= (p31 and (ei or ii)) or (p22 and ei and ii);
   disp6n <= (p13 and not  (ei and ii)) or (p22 and not ei and not ii);
@@ -225,27 +248,47 @@ begin
   prc_output : process (clk) is begin
     if rising_edge(clk) then
       if ena then
-        -- Rewritten code_err calculation after reading A DC-Balanced, Partitioned-Block, 8B/ 1 OB Transmission Code (A. X. Widmer and P. A. Franaszek)
-        code_err <= ((ai and bi and ci and di) or (not (ai or bi or ci or di))) or
-                     (p13 and (not ei) and (not ii)) or
-                     (p31 and ei and ii) or
-                     ((fi and gi and hi and ji) or (not (fi or gi or hi or ji))) or
-                     ((ei and ii and fi and gi and hi) or (not (ei or ii or fi or gi or hi))) or
-                     (((not ii) and  ei and gi and hi and ji) or (not ((not ii) or  ei or gi or hi or ji))) or
-                     ((((not ei) and (not ii) and gi and hi and ji) or (not ((not ei) or (not ii) or gi or hi or ji))) and
-                     (not ((ci and di and ei) or (not (ci or di or ei))))) or
-                     ((not p31) and ei and (not ii) and (not gi) and (not hi) and (not ji)) or
-                     ((not p13) and (not ei) and ii and gi and hi and ji);
+        -- Rewritten code_err calculation after reading A DC-Balanced,
+        -- Partitioned-Block, 8B/ 1 OB Transmission Code (A. X. Widmer and
+        -- P. A. Franaszek)
+        code_err <= (
+          ((ai and bi and ci and di) or (not (ai or bi or ci or di))) or
+          (p13 and (not ei) and (not ii)) or
+          (p31 and ei and ii) or
+          ((fi and gi and hi and ji) or (not (fi or gi or hi or ji))) or
+          (
+            (ei and ii and fi and gi and hi) or
+            (not (ei or ii or fi or gi or hi))
+          ) or
+          (
+            ((not ii) and  ei and gi and hi and ji) or
+            (not ((not ii) or  ei or gi or hi or ji))
+          ) or
+          (
+            (
+              ((not ei) and (not ii) and gi and hi and ji) or
+              (not ((not ei) or (not ii) or gi or hi or ji))
+            ) and
+            (not ((ci and di and ei) or (not (ci or di or ei))))
+          ) or
+          (
+            (not p31) and ei and (not ii) and (not gi) and (not hi) and (not ji)
+          ) or
+          ((not p13) and (not ei) and ii and gi and hi and ji)
+        );
 
-        disp_err <= ((dispin and disp6p) or (disp6n and not dispin) or
-                      (dispin and not disp6n and fi and gi) or
-                      (dispin and ai and bi and ci) or
-                      (dispin and not disp6n and disp4p) or
-                      (not dispin and not disp6p and not fi and not gi) or
-                      (not dispin and not ai and not bi and not ci) or
-                      (not dispin and not disp6p and disp4n) or
-                      (disp6p and disp4p) or (disp6n and disp4n)
-                    );
+        disp_err <= (
+          (dispin and disp6p) or
+          (disp6n and not dispin) or
+          (dispin and not disp6n and fi and gi) or
+          (dispin and ai and bi and ci) or
+          (dispin and not disp6n and disp4p) or
+          (not dispin and not disp6p and not fi and not gi) or
+          (not dispin and not ai and not bi and not ci) or
+          (not dispin and not disp6p and disp4n) or
+          (disp6p and disp4p) or
+          (disp6n and disp4n)
+        );
 
         dispin <= dispout;
         dout   <= ho & go & fo & eo & do & co & bo & ao;

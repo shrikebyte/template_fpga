@@ -1,9 +1,12 @@
 --##############################################################################
 --# File : strm_pipes_tb.vhd
 --# Auth : David Gussler
---# Lang : VHDL '08
 --# ============================================================================
---! Stream pipes module testbench
+--# Shrikebyte VHDL Library - https://github.com/shrikebyte/sblib
+--# Copyright (C) Shrikebyte, LLC
+--# Licensed under the Apache 2.0 license, see LICENSE for details.
+--# ============================================================================
+--# Stream pipes module testbench
 --##############################################################################
 
 library ieee;
@@ -76,7 +79,7 @@ begin
       tlast : std_logic;
     end record;
 
-    type axis_xfer_arr_t is array (natural range 0 to AXIS_MAX_QUEUED_XFERS - 1) of axis_xfer_t;
+    type axis_xfer_arr_t is array(natural range 0 to AXIS_MAX_QUEUED_XFERS - 1) of axis_xfer_t;
 
     variable xfers : axis_xfer_arr_t;
   -- variable tlast_exp : std_logic;

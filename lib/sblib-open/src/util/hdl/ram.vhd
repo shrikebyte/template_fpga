@@ -1,10 +1,13 @@
 --##############################################################################
 --# File : ram.vhd
 --# Auth : David Gussler
---# Lang : VHDL '08
 --# ============================================================================
---! Vendor agnostic read-first bram generator. Can be used as a tdpr, sdpr,
---! spr, rom, etc. Just leave unused ports disconnected.
+--# Shrikebyte VHDL Library - https://github.com/shrikebyte/sblib
+--# Copyright (C) Shrikebyte, LLC
+--# Licensed under the Apache 2.0 license, see LICENSE for details.
+--# ============================================================================
+--# Vendor agnostic read-first bram generator. Can be used as a tdpr, sdpr,
+--# spr, rom, etc. Just leave unused ports disconnected.
 --##############################################################################
 
 library ieee;
@@ -46,7 +49,8 @@ entity ram is
 
     --! Data to initialize the ram with at FPGA startup. Only compatible with
     --! SRAM-based FPGAs.
-    G_RAM_INIT : slv_arr_t(0 to (2 ** G_ADDR_WIDTH) - 1)(G_BYTES_PER_ROW * G_BYTE_WIDTH - 1 downto 0) := (others=> (others=> '0'));
+    G_RAM_INIT : slv_arr_t(0 to (2 ** G_ADDR_WIDTH) - 1)(G_BYTES_PER_ROW * G_BYTE_WIDTH - 1 downto 0) :=
+      (others=> (others=> '0'));
 
     --! Read latency
     G_RD_LATENCY : positive := 1

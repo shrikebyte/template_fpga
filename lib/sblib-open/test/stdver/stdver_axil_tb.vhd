@@ -1,9 +1,12 @@
 --##############################################################################
 --# File : stdver_axil_tb.vhd
 --# Auth : David Gussler
---# Lang : VHDL '08
 --# ============================================================================
---! Standard version module testbench
+--# Shrikebyte VHDL Library - https://github.com/shrikebyte/sblib
+--# Copyright (C) Shrikebyte, LLC
+--# Licensed under the Apache 2.0 license, see LICENSE for details.
+--# ============================================================================
+--# Standard version module testbench
 --##############################################################################
 
 library ieee;
@@ -168,7 +171,7 @@ begin
   );
 
   -- ---------------------------------------------------------------------------
-  u_axil_bfm : entity work.axil_bfm
+  u_axil_bfm : entity work.bfm_axil_man
   generic map (
     G_BUS_HANDLE => AXIM
   )
