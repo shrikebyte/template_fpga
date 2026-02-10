@@ -1,9 +1,12 @@
 --##############################################################################
 --# File : util_pkg.vhd
 --# Auth : David Gussler
---# Lang : VHDL '08
 --# ============================================================================
---! General library utilities package
+--# Shrikebyte VHDL Library - https://github.com/shrikebyte/sblib
+--# Copyright (C) Shrikebyte, LLC
+--# Licensed under the Apache 2.0 license, see LICENSE for details.
+--# ============================================================================
+--# General library utilities package
 --##############################################################################
 
 library ieee;
@@ -19,13 +22,9 @@ package util_pkg is
   constant AXIL_ADDR_WIDTH : integer := 32;
 
   subtype axil_data_range is natural range AXIL_DATA_WIDTH - 1 downto 0;
-
   subtype axil_addr_range is natural range AXIL_ADDR_WIDTH - 1 downto 0;
-
   subtype axil_strb_range is natural range AXIL_DATA_WIDTH / 8 - 1 downto 0;
-
   subtype axil_prot_range is natural range 2 downto 0;
-
   subtype axil_resp_range is natural range 1 downto 0;
 
   constant AXI_RSP_OKAY   : std_logic_vector(AXIL_RESP_RANGE) := b"00";
@@ -58,9 +57,8 @@ package util_pkg is
     rresp   : std_logic_vector(AXIL_RESP_RANGE);
   end record;
 
-  type axil_req_arr_t is array (natural range <>) of axil_req_t;
-
-  type axil_rsp_arr_t is array (natural range <>) of axil_rsp_t;
+  type axil_req_arr_t is array(natural range <>) of axil_req_t;
+  type axil_rsp_arr_t is array(natural range <>) of axil_rsp_t;
 
   -- ---------------------------------------------------------------------------
   -- Wishbone (Non-pipelined)
@@ -79,9 +77,8 @@ package util_pkg is
     rdat : std_logic_vector(AXIL_DATA_RANGE);
   end record;
 
-  type wb_req_arr_t is array (natural range <>) of wb_req_t;
-
-  type wb_rsp_arr_t is array (natural range <>) of wb_rsp_t;
+  type wb_req_arr_t is array(natural range <>) of wb_req_t;
+  type wb_rsp_arr_t is array(natural range <>) of wb_rsp_t;
 
   -- ---------------------------------------------------------------------------
   -- Advanced Peripheral Bus
@@ -101,9 +98,8 @@ package util_pkg is
     pslverr : std_logic;
   end record;
 
-  type apb_req_arr_t is array (natural range <>) of apb_req_t;
-
-  type apb_rsp_arr_t is array (natural range <>) of apb_rsp_t;
+  type apb_req_arr_t is array(natural range <>) of apb_req_t;
+  type apb_rsp_arr_t is array(natural range <>) of apb_rsp_t;
 
   -- ---------------------------------------------------------------------------
   -- Register Bus
@@ -131,9 +127,8 @@ package util_pkg is
     werr  : std_logic;
   end record;
 
-  type reg_req_arr_t is array (natural range <>) of reg_req_t;
-
-  type reg_rsp_arr_t is array (natural range <>) of reg_rsp_t;
+  type reg_req_arr_t is array(natural range <>) of reg_req_t;
+  type reg_rsp_arr_t is array(natural range <>) of reg_rsp_t;
 
   -- ---------------------------------------------------------------------------
   -- Transaction type
@@ -147,25 +142,36 @@ package util_pkg is
     mask  : std_logic_vector(AXIL_DATA_RANGE);
   end record;
 
-  type bus_xact_arr_t is array (natural range <>) of bus_xact_t;
+  type bus_xact_arr_t is array(natural range <>) of bus_xact_t;
 
   -- ---------------------------------------------------------------------------
   -- Array types
-  type sl_arr_t is array (natural range <>) of std_logic;
-
-  type slv_arr_t is array (natural range <>) of std_logic_vector;
-
-  type int_arr_t is array (natural range <>) of integer;
-
-  type bool_arr_t is array (natural range <>) of boolean;
-
-  type string_arr_t is array (natural range <>) of string;
+  type slv_arr_t is array(natural range <>) of std_logic_vector;
+  type unsigned_arr_t is array(natural range <>) of u_unsigned;
+  type signed_arr_t is array(natural range <>) of u_signed;
+  type int_arr_t is array(natural range <>) of integer;
+  type pos_arr_t is array(natural range <>) of positive;
+  type nat_arr_t is array(natural range <>) of natural;
+  type bool_arr_t is array(natural range <>) of boolean;
+  type string_arr_t is array(natural range <>) of string;
 
   -- ---------------------------------------------------------------------------
   -- Functions
   function cnt_ones (
     vec : std_logic_vector
   ) return natural;
+
+  function cnt_ones (
+    vec : u_unsigned
+  ) return natural;
+
+  function cnt_ones_contig (
+    vec : std_ulogic_vector
+  ) return natural;
+
+  function is_contig (
+    vec : std_ulogic_vector
+  ) return boolean;
 
   function is_onehot (
     vec : std_logic_vector
@@ -176,12 +182,12 @@ package util_pkg is
   ) return std_logic;
 
   function bin_to_gray (
-    bin : std_logic_vector
-  ) return std_logic_vector;
+    bin : u_unsigned
+  ) return std_ulogic_vector;
 
   function gray_to_bin (
-    gray : std_logic_vector
-  ) return std_logic_vector;
+    gray : std_ulogic_vector
+  ) return u_unsigned;
 
   function clog2 (
     value : positive
@@ -198,6 +204,70 @@ package util_pkg is
   function find_lo_idx (
     vec : std_logic_vector
   ) return natural;
+
+  function to_sl (
+    val : boolean
+  ) return std_ulogic;
+
+  function to_sl (
+    val : natural range 0 to 1
+  ) return std_ulogic;
+
+  function to_int (
+    val : std_ulogic
+  ) return integer;
+
+  function to_int (
+    val : boolean
+  ) return integer;
+
+  function to_bool (
+    val : std_ulogic
+  ) return boolean;
+
+  function to_bool (
+    val : natural range 0 to 1
+  ) return boolean;
+
+  function find_max (
+    arr : int_arr_t
+  ) return integer;
+
+  function find_min (
+    arr : int_arr_t
+  ) return integer;
+
+  function find_max (
+    arr : nat_arr_t
+  ) return integer;
+
+  function find_min (
+    arr : nat_arr_t
+  ) return integer;
+
+  function find_max (
+    arr : pos_arr_t
+  ) return integer;
+
+  function find_min (
+    arr : pos_arr_t
+  ) return integer;
+
+  function expand_bits (
+    vec : std_ulogic_vector;
+    n : positive
+  ) return std_ulogic_vector;
+
+  function contract_bits (
+    vec : std_ulogic_vector;
+    n : positive
+  ) return std_ulogic_vector;
+
+  function if_then_else (
+    cond : boolean;
+    if_true : integer;
+    if_false : integer
+  ) return integer;
 
 end package;
 
@@ -216,6 +286,54 @@ package body util_pkg is
       end if;
     end loop;
     return tmp;
+  end function;
+
+  function cnt_ones (
+    vec : u_unsigned
+  ) return natural is
+    variable tmp : natural := 0;
+  begin
+    for i in vec'range loop
+      if vec(i) = '1' then
+        tmp := tmp + 1;
+      end if;
+    end loop;
+    return tmp;
+  end function;
+
+  -- ---------------------------------------------------------------------------
+  -- Optimized version of cnt_ones that assumes input bits are
+  -- contiguous from low to high.
+  function cnt_ones_contig (
+    vec : std_ulogic_vector
+  ) return natural is
+    constant VEC_LEN  : natural := vec'length;
+    variable vec_norm : std_ulogic_vector(VEC_LEN - 1 downto 0);
+    variable result   : natural := 0;
+  begin
+    vec_norm := vec;
+    for i in 0 to VEC_LEN - 1 loop
+      if vec_norm(i) then
+        result := i + 1;
+      end if;
+    end loop;
+    return result;
+  end function;
+
+  -- Return true if a vector has contiguous ones from low to high.
+  function is_contig (
+    vec : std_ulogic_vector
+  ) return boolean is
+    variable saw_zero : boolean := false;
+  begin
+    for i in vec'low to vec'high loop
+      if vec(i) = '0' then
+        saw_zero := true;
+      elsif saw_zero then
+        return false;
+      end if;
+    end loop;
+    return true;
   end function;
 
   -- ---------------------------------------------------------------------------
@@ -255,9 +373,9 @@ package body util_pkg is
   -- ---------------------------------------------------------------------------
   -- Convert a binary coded number to a gray coded number
   function bin_to_gray (
-    bin : std_logic_vector
-  ) return std_logic_vector is
-    variable gray : std_logic_vector(bin'range);
+    bin : u_unsigned
+  ) return std_ulogic_vector is
+    variable gray : std_ulogic_vector(bin'length - 1 downto 0);
   begin
     gray(gray'high) := bin(gray'high);
     for i in gray'high - 1 downto 0 loop
@@ -269,9 +387,9 @@ package body util_pkg is
   -- ---------------------------------------------------------------------------
   -- Convert a gray coded number to a binary coded number
   function gray_to_bin (
-    gray : std_logic_vector
-  ) return std_logic_vector is
-    variable bin : std_logic_vector(gray'range);
+    gray : std_ulogic_vector
+  ) return u_unsigned is
+    variable bin : u_unsigned(gray'length - 1 downto 0);
   begin
     bin(gray'high) := gray(gray'high);
     for i in gray'high - 1 downto 0 loop
@@ -300,7 +418,8 @@ package body util_pkg is
   end function;
 
   -- ---------------------------------------------------------------------------
-  -- Find the left-most index of an slv that is '1'. If no match, return left-most idx.
+  -- Find the left-most index of an slv that is '1'. If no match, return
+  -- left-most idx.
   function find_hi_idx (
     vec : std_logic_vector
   ) return natural is
@@ -314,7 +433,8 @@ package body util_pkg is
   end function;
 
   -- ---------------------------------------------------------------------------
-  -- Find the right-most index of an slv that is '1'. If no match, return left-most idx.
+  -- Find the right-most index of an slv that is '1'. If no match, return
+  -- left-most idx.
   function find_lo_idx (
     vec : std_logic_vector
   ) return natural is
@@ -325,6 +445,204 @@ package body util_pkg is
       end if;
     end loop;
     return vec'high;
+  end function;
+
+  -- ---------------------------------------------------------------------------
+  -- Convert a boolean to standard logic
+  function to_sl (
+    val : boolean
+  ) return std_ulogic is
+  begin
+    if val then
+      return '1';
+    end if;
+    return '0';
+  end function;
+
+  function to_sl (
+    val : natural range 0 to 1
+  ) return std_ulogic is
+  begin
+    if val = 1 then
+      return '1';
+    end if;
+    return '0';
+  end function;
+
+  function to_int (
+    val : std_ulogic
+  ) return integer is
+  begin
+    if val = '1' then
+      return 1;
+    else
+      return 0;
+    end if;
+  end function;
+
+  function to_int (
+    val : boolean
+  ) return integer is
+  begin
+    if val = true then
+      return 1;
+    else
+      return 0;
+    end if;
+  end function;
+
+  function to_bool (
+    val : std_ulogic
+  ) return boolean is
+  begin
+    if val = '1' then
+      return true;
+    end if;
+    return false;
+  end function;
+
+  function to_bool (
+    val : natural range 0 to 1
+  ) return boolean is
+  begin
+    return val = 1;
+  end function;
+
+  -- ---------------------------------------------------------------------------
+  -- Find the max value of an integer array
+  function find_max (
+    arr : int_arr_t
+  ) return integer is
+    variable rtn : integer := arr(arr'low);
+  begin
+    for i in arr'range loop
+      if arr(i) > rtn then
+        rtn := arr(i);
+      end if;
+    end loop;
+    return rtn;
+  end function;
+
+  -- ---------------------------------------------------------------------------
+  -- Find the min value of an integer array
+  function find_min (
+    arr : int_arr_t
+  ) return integer is
+    variable rtn : integer := arr(arr'low);
+  begin
+    for i in arr'range loop
+      if arr(i) < rtn then
+        rtn := arr(i);
+      end if;
+    end loop;
+    return rtn;
+  end function;
+
+  function find_max (
+    arr : nat_arr_t
+  ) return integer is
+    variable rtn : integer := arr(arr'low);
+  begin
+    for i in arr'range loop
+      if arr(i) > rtn then
+        rtn := arr(i);
+      end if;
+    end loop;
+    return rtn;
+  end function;
+
+  function find_min (
+    arr : nat_arr_t
+  ) return integer is
+    variable rtn : integer := arr(arr'low);
+  begin
+    for i in arr'range loop
+      if arr(i) < rtn then
+        rtn := arr(i);
+      end if;
+    end loop;
+    return rtn;
+  end function;
+
+  function find_max (
+    arr : pos_arr_t
+  ) return integer is
+    variable rtn : integer := arr(arr'low);
+  begin
+    for i in arr'range loop
+      if arr(i) > rtn then
+        rtn := arr(i);
+      end if;
+    end loop;
+    return rtn;
+  end function;
+
+  function find_min (
+    arr : pos_arr_t
+  ) return integer is
+    variable rtn : integer := arr(arr'low);
+  begin
+    for i in arr'range loop
+      if arr(i) < rtn then
+        rtn := arr(i);
+      end if;
+    end loop;
+    return rtn;
+  end function;
+
+  function expand_bits (
+    vec : std_ulogic_vector;
+    n : positive
+  ) return std_ulogic_vector is
+    constant VEC_LEN  : natural := vec'length;
+    constant OUT_LEN  : natural := VEC_LEN * n;
+    variable result   : std_ulogic_vector(OUT_LEN - 1 downto 0);
+    variable vec_norm : std_ulogic_vector(VEC_LEN - 1 downto 0);
+  begin
+    vec_norm := vec;
+
+    for i in 0 to VEC_LEN - 1 loop
+      for j in 0 to n - 1 loop
+        result((i * N) + j) := vec_norm(i);
+      end loop;
+    end loop;
+
+    return result;
+  end function;
+
+  function contract_bits (
+    vec : std_ulogic_vector;
+    n : positive
+  ) return std_ulogic_vector is
+    constant VEC_LEN  : natural := vec'length;
+    constant OUT_LEN  : natural := VEC_LEN / n;
+    variable result   : std_ulogic_vector(OUT_LEN - 1 downto 0);
+    variable vec_norm : std_ulogic_vector(VEC_LEN - 1 downto 0);
+  begin
+    assert (VEC_LEN mod n) = 0
+      report "contract_bits: Vector length must be divisible by N."
+      severity failure;
+
+    vec_norm := vec;
+
+    for i in 0 to OUT_LEN - 1 loop
+      result(i) := vec_norm(i * n);
+    end loop;
+
+    return result;
+  end function;
+
+  function if_then_else (
+    cond : boolean;
+    if_true : integer;
+    if_false : integer
+  ) return integer is
+  begin
+    if cond then
+      return if_true;
+    else
+      return if_false;
+    end if;
   end function;
 
 end package body;

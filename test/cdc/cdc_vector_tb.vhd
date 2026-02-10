@@ -1,9 +1,12 @@
 --##############################################################################
 --# File : cdc_vector_tb.vhd
 --# Auth : David Gussler
---# Lang : VHDL '08
 --# ============================================================================
---! Vector CDC TB
+--# Shrikebyte VHDL Library - https://github.com/shrikebyte/sblib
+--# Copyright (C) Shrikebyte, LLC
+--# Licensed under the Apache 2.0 license, see LICENSE for details.
+--# ============================================================================
+--# Vector CDC TB
 --##############################################################################
 
 library ieee;
@@ -46,8 +49,8 @@ architecture tb of cdc_vector_tb is
   signal m_srstn : std_logic := '0';
 
   -- Module Generics
-  constant G_WIDTH    : positive := 8;
-  constant G_SYNC_LEN : positive := 3;
+  constant G_WIDTH      : positive := 8;
+  constant G_EXTRA_SYNC : natural  := 0;
 
   -- Module Ports
   signal s_valid : std_logic;
@@ -80,7 +83,7 @@ begin
       tlast : std_logic;
     end record;
 
-    type axis_xfer_arr_t is array (natural range 0 to AXIS_MAX_QUEUED_XFERS - 1) of axis_xfer_t;
+    type axis_xfer_arr_t is array(natural range 0 to AXIS_MAX_QUEUED_XFERS - 1) of axis_xfer_t;
 
     variable xfers : axis_xfer_arr_t;
 
@@ -133,7 +136,7 @@ begin
   end process;
 
   -- -- Watchdog
-  -- test_runner_watchdog(runner, 100 us);
+  test_runner_watchdog(runner, 100 us);
 
   -- ---------------------------------------------------------------------------
   -- Clocks & Resets
@@ -158,18 +161,17 @@ begin
   -- DUT
   u_dut : entity work.cdc_vector
   generic map (
-    G_SYNC_LEN => G_SYNC_LEN,
-    G_WIDTH    => G_WIDTH
+    G_EXTRA_SYNC => G_EXTRA_SYNC
   )
   port map (
-    s_clk   => s_clk,
-    s_valid => s_valid,
-    s_ready => s_ready,
-    s_data  => s_data,
-    m_clk   => m_clk,
-    m_valid => m_valid,
-    m_ready => m_ready,
-    m_data  => m_data
+    src_clk   => s_clk,
+    src_valid => s_valid,
+    src_ready => s_ready,
+    src_data  => s_data,
+    dst_clk   => m_clk,
+    dst_valid => m_valid,
+    dst_ready => m_ready,
+    dst_data  => m_data
   );
 
   -- ---------------------------------------------------------------------------

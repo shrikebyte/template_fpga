@@ -1,44 +1,44 @@
 --##############################################################################
 --# File : ebtb_encode.vhd
 --# Auth : Chuck Benz, Frans Schreuder, with modifications by David Gussler
---# Lang : VHDL '08
 --# ============================================================================
---! Copyright 2002    Chuck Benz, Hollis, NH
---! Copyright 2020    Frans Schreuder
---!
---! Licensed under the Apache License, Version 2.0 (the "License");
---! you may not use this file except in compliance with the License.
---! You may obtain a copy of the License at
---!
---!     http://www.apache.org/licenses/LICENSE-2.0
---!
---! Unless required by applicable law or agreed to in writing, software
---! distributed under the License is distributed on an "AS IS" BASIS,
---! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
---! See the License for the specific language governing permissions and
---! limitations under the License.
---!
---! The information and description contained herein is the
---! property of Chuck Benz.
---!
---! Permission is granted for any reuse of this information
---! and description as long as this copyright notice is
---! preserved.  Modifications may be made as long as this
---! notice is preserved.
---!
---! Changelog:
---! 11 October  2002: Chuck Benz:
---!   - updated with clearer messages, and checking decodeout
---!
---! 3  November 2020: Frans Schreuder:
---!   - Translated to VHDL, added UVVM testbench
---!   - Original verilog code: http://asics.chuckbenz.com/#My_open_source_8b10b_encoderdecoder
---!
---! 8  January  2025: David Gussler:
---!   - Renamed module, code style update, changed reset to synchronous
---!   - Original VHDL code: https://github.com/fransschreuder/8b10b_VHDL
---!
---! per Widmer and Franaszek
+--# Copyright 2002    Chuck Benz, Hollis, NH
+--# Copyright 2020    Frans Schreuder
+--#
+--# Licensed under the Apache License, Version 2.0 (the "License");
+--# you may not use this file except in compliance with the License.
+--# You may obtain a copy of the License at
+--#
+--#     http://www.apache.org/licenses/LICENSE-2.0
+--#
+--# Unless required by applicable law or agreed to in writing, software
+--# distributed under the License is distributed on an "AS IS" BASIS,
+--# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+--# See the License for the specific language governing permissions and
+--# limitations under the License.
+--#
+--# The information and description contained herein is the
+--# property of Chuck Benz.
+--#
+--# Permission is granted for any reuse of this information
+--# and description as long as this copyright notice is
+--# preserved.  Modifications may be made as long as this
+--# notice is preserved.
+--# ============================================================================
+--# Changelog:
+--# 11 October  2002: Chuck Benz:
+--#   - updated with clearer messages, and checking decodeout
+--#
+--# 3  November 2020: Frans Schreuder:
+--#   - Translated to VHDL, added UVVM testbench
+--#   - Original verilog code:
+--#     http://asics.chuckbenz.com/#My_open_source_8b10b_encoderdecoder
+--#
+--# 8  January  2025: David Gussler:
+--#   - Renamed module, code style update, changed reset to synchronous
+--#   - Original VHDL code: https://github.com/fransschreuder/8b10b_VHDL
+--#
+--# per Widmer and Franaszek
 --##############################################################################
 
 library ieee;
@@ -120,10 +120,10 @@ begin
       if ena then
         dispin <= dispout;
         dout   <= (ao xor compls6) & (bo xor compls6) &
-                    (co xor compls6) & (do xor compls6) &
-                    (eo xor compls6) & (io xor compls6) &
-                    (fo xor compls4) & (go xor compls4) &
-                    (ho xor compls4) & (jo xor compls4);
+          (co xor compls6) & (do xor compls6) &
+          (eo xor compls6) & (io xor compls6) &
+          (fo xor compls4) & (go xor compls4) &
+          (ho xor compls4) & (jo xor compls4);
       end if;
 
       if srst then
@@ -137,27 +137,26 @@ begin
   aeqb <= (ai and bi) or (not ai and not bi);
   ceqd <= (ci and di) or (not ci and not di);
   l22  <= (ai and bi and not ci and not di) or
-          (ci and di and not ai and not bi) or
-          (not aeqb and not ceqd);
+    (ci and di and not ai and not bi) or
+    (not aeqb and not ceqd);
   l40  <= ai and bi and ci and  di;
   l04  <= not ai and not bi and not ci and not di;
   l13  <= (not aeqb and not ci and not di) or
-          (not ceqd and not ai and not bi);
+    (not ceqd and not ai and not bi);
   l31  <= (not aeqb and ci and di) or
-          (not ceqd and ai and bi);
+    (not ceqd and ai and bi);
 
   -- The 5B/6B encoding
-
   ao <= ai;
   bo <= (bi and not l40) or l04;
   co <= l04 or ci or (ei and di and not ci and not bi and not ai);
   do <= di and (not (ai and bi and ci));
   eo <= (ei or l13) and not (ei and di and not ci and not bi and not ai);
   io <= (l22 and not ei) or
-        (ei and not di and not ci and not (ai and bi)) or  -- D16, D17, D18
-        (ei and l40) or
-        (ki and ei and di and ci and not bi and not ai) or -- K.28
-        (ei and not di and ci and not bi and not ai);
+    (ei and not di and not ci and not (ai and bi)) or  -- D16, D17, D18
+    (ei and l40) or
+    (ki and ei and di and ci and not bi and not ai) or -- K.28
+    (ei and not di and ci and not bi and not ai);
 
   -- pds16 indicates cases where d-1 is assumed + to get our encoded value
   pd1s6 <= (ei and di and not ci and not bi and not ai) or (not ei and not l22 and not l31);
@@ -218,7 +217,6 @@ begin
   -- nds16 indicates cases where d-1 is assumed - to get our encoded value
   -- pdos6 is cases where d-1 is - yields + disp out
   -- disp toggles in all ndis16 cases, and all but that 1 nds16 case
-
   disp6   <= dispin xor (ndos6 or pdos6);
   compls4 <= (pd1s4 and not disp6) or (nd1s4 and disp6);
   dispout <= disp6 xor (ndos4 or pdos4);

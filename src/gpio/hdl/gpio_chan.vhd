@@ -1,9 +1,12 @@
 --##############################################################################
 --# File : gpio_chan.vhd
 --# Auth : David Gussler
---# Lang : VHDL '08
 --# ============================================================================
---! Single GPIO Channel
+--# Shrikebyte VHDL Library - https://github.com/shrikebyte/sblib
+--# Copyright (C) Shrikebyte, LLC
+--# Licensed under the Apache 2.0 license, see LICENSE for details.
+--# ============================================================================
+--# Single GPIO Channel
 --##############################################################################
 
 library ieee;
@@ -57,9 +60,7 @@ begin
 
     u_cdc_bit : entity work.cdc_bit
     generic map (
-      G_USE_SRC_CLK => FALSE,
-      G_SYNC_LEN    => 2,
-      G_WIDTH       => G_CH_WIDTH
+      G_USE_SRC_REG => false
     )
     port map (
       src_bit => gpio_i,

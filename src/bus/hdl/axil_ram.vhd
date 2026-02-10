@@ -1,10 +1,13 @@
 --##############################################################################
 --# File     : axil_ram.vhd
 --# Author   : David Gussler
---# Language : VHDL '08
 --# ============================================================================
---! AXI lite ram.
---! Supports full thruput one read and one write per clock cycle.
+--# Shrikebyte VHDL Library - https://github.com/shrikebyte/sblib
+--# Copyright (C) Shrikebyte, LLC
+--# Licensed under the Apache 2.0 license, see LICENSE for details.
+--# ============================================================================
+--# AXI lite ram.
+--# Supports full thruput one read and one write per clock cycle.
 --##############################################################################
 
 library ieee;
@@ -72,7 +75,7 @@ begin
     b_en   => '1',
     b_wen  => b"0000",
     b_addr => ram_req.raddr(G_ADDR_WIDTH - 1 + 2 downto 2),
-    b_wdat => (others=>'0'),
+    b_wdat => (others=> '0'),
     b_rdat => ram_rsp.rdata
   );
 
