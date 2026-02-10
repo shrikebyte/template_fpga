@@ -1,9 +1,9 @@
 --##############################################################################
---# File : chip.vhd
+--# File : fpga.vhd
 --# Auth : David Gussler
 --# Lang : VHDL'08
 --# ============================================================================
---! Top level chip
+--! Top level fpga
 --##############################################################################
 
 library ieee;
@@ -11,9 +11,8 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use work.util_pkg.all;
 
-entity chip is
+entity fpga is
   generic (
-    G_IS_SIM      : boolean                       := false;
     G_DEVICE_ID   : std_logic_vector(31 downto 0) := x"DEAD_BEEF";
     G_VER_MAJOR   : integer range 0 to 255        := 255;
     G_VER_MINOR   : integer range 0 to 255        := 255;
@@ -27,11 +26,13 @@ entity chip is
   );
   port (
     i_uart_rxd : in    std_logic;
-    o_uart_txd : out   std_logic
+    o_uart_txd : out   std_logic;
+    i_gpio0 : in std_logic;
+    o_gpio1 : out std_logic
   );
 end entity;
 
-architecture rtl of chip is
+architecture rtl of fpga is
 
   signal clk_100m     : std_logic;
   signal srst_100m    : std_logic;

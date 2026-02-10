@@ -1,9 +1,8 @@
 ################################################################################
 # File: build.tcl
 # Auth: David Gussler
-# Lang: Vivado TCL
 # ==============================================================================
-# Build an FPGA project with Vivado
+# Build FPGA binaries with Vivado
 ################################################################################
 
 
@@ -26,7 +25,7 @@ proc getDateTime {} {
   set datetime_arr [clock format [clock seconds] -format {%Y %y %m %d %H %M %S 00}]
   # Example :
   # 2020 20 05 27 13 45 45 00
-  
+
   # Get the datecode in the yyyy-mm-dd format
   set datecode [lindex $datetime_arr 0][lindex $datetime_arr 2][lindex $datetime_arr 3]
   # Get the timecode in the hh-mm-ss format
@@ -73,7 +72,7 @@ proc getGitHash {} {
   return [ list $git_dirty $git_hash ]
 }
 
-# Figure out if this build has been initiated from a local engineer's PC or 
+# Figure out if this build has been initiated from a local engineer's PC or
 # from a CI server
 proc getLocalBuildStatus {} {
 
@@ -110,29 +109,24 @@ proc getDevBuildStatus {} {
 }
 
 
-
 ################################################################################
 # Setup variables
 ################################################################################
-
-# Input arguments
-if { $argc != 7 } {
-  puts "ERROR: Script usage - build.tcl <project_name> <platform_name> <device_id> <ver_maj> <ver_min> <ver_pat> <jobs>"
+if { $argc != 6 } {
+  puts "ERROR: Script usage - build.tcl <project_name> <board_name> <ver_maj> <ver_min> <ver_pat> <jobs>"
   exit
 }
 set proj_name [lindex $argv 0]
-set plat_name [lindex $argv 1]
-set device_id [lindex $argv 2]
-set ver_major [lindex $argv 3]
-set ver_minor [lindex $argv 4]
-set ver_patch [lindex $argv 5]
-set num_cpus  [lindex $argv 6]
+set board_name [lindex $argv 1]
+set ver_major [lindex $argv 2]
+set ver_minor [lindex $argv 3]
+set ver_patch [lindex $argv 4]
+set num_cpus  [lindex $argv 5]
 
-
-# Script variables
 set build_time_start [clock seconds]
 set host_name [info hostname]
-set script_dir [file dirname [info script]]
+set script_dir [file normalize [file dirname [info script]]]
+set root_dir [file normalize ${script_dir}/../]
 set build_date_time [getDateTime]
 set build_date [lindex $build_date_time 0]
 set build_time [lindex $build_date_time 1]
@@ -141,22 +135,19 @@ set git_dirty [lindex $git_dirty_hash 0]
 set git_hash [lindex $git_dirty_hash 1]
 set local_build [getLocalBuildStatus]
 set dev_build [getDevBuildStatus]
+set proj_dir [file normalize ${root_dir}/build/vivado_out/${proj_name}_${board_name}]
+set release_dir [file normalize ${root_dir}/build/${build_name}]
 
-# Check validity of version info
-puts "Major version: $ver_major"
-puts "Minor version: $ver_minor"
-puts "Patch version: $ver_patch"
-set ver_string "v${ver_major}.${ver_minor}.${ver_patch}"
-
-# Bounds checking on version numbers
 foreach value [list $ver_major $ver_minor $ver_patch] {
   if { $value < 0 || $value > 255 } {
     puts "ERROR: version number out of range (0-255): $value"
     exit 1
   }
 }
-
-set proj_dir ${script_dir}/../build/vivado_out/${proj_name}_${plat_name}
+puts "Major version: $ver_major"
+puts "Minor version: $ver_minor"
+puts "Patch version: $ver_patch"
+set ver_string "v${ver_major}.${ver_minor}.${ver_patch}"
 
 
 ################################################################################
@@ -166,14 +157,13 @@ puts "INFO: Starting build with $num_cpus jobs."
 
 # Open the project if it's not already open
 if {[catch current_project] != 0} {
-  open_project ${proj_dir}/${proj_name}_${plat_name}.xpr
+  open_project ${proj_dir}/${proj_name}_${board_name}.xpr
 }
 
 set top_entity [lindex [find_top] 0]
 
 # Create the build release directory
-set build_name ${proj_name}_${ver_string}-${plat_name}
-set release_dir [file normalize ${script_dir}/../build/${build_name}]
+set build_name ${proj_name}_${ver_string}-${board_name}
 if {![file isdirectory $release_dir]} {
   file mkdir $release_dir
 }
@@ -181,8 +171,7 @@ puts "Build Directory = $release_dir"
 
 # Set build-time generics
 set_property generic " \
-  G_IS_SIM=1'b0 \
-  G_DEVICE_ID=32'h$device_id \
+  G_DEVICE_ID=32'h$FPGA_ID \
   G_VER_MAJOR=$ver_major \
   G_VER_MINOR=$ver_minor \
   G_VER_PATCH=$ver_patch \
@@ -241,38 +230,41 @@ file copy -force ${impl_dir}/${top_entity}.vdi ${release_dir}/${build_name}_impl
 
 set should_exit 0
 
-# Check for negative slack
-set slack [get_property SLACK [get_timing_paths -delay_type "min_max"]]
-if {${slack} != "" && [expr {${slack} < 0}]} {
-  puts "ERROR: Setup/hold timing negative slack after implementation run. See '${release_dir}/${build_name}_timing.rpt' report."
-  set should_exit 1
+if {$CHECK_TIMING} {
+  # Check for negative slack
+  set slack [get_property SLACK [get_timing_paths -delay_type "min_max"]]
+  if {${slack} != "" && [expr {${slack} < 0}]} {
+    puts "ERROR: Setup/hold timing negative slack after implementation run. See '${release_dir}/${build_name}_timing.rpt' report."
+    set should_exit 1
+  }
+
+  # Check for pulse width violations
+  if {[report_pulse_width -return_string -all_violators -no_header] != ""} {
+    puts "ERROR: Pulse width timing violation after implementation run. See '${release_dir}/${build_name}_pulse_width.rpt' report."
+    report_pulse_width -all_violators -file "${release_dir}/${build_name}_pulse_width.rpt"
+    set should_exit 1
+  }
 }
 
-# Check for pulse width violations
-if {[report_pulse_width -return_string -all_violators -no_header] != ""} {
-  puts "ERROR: Pulse width timing violation after implementation run. See '${release_dir}/${build_name}_pulse_width.rpt' report."
-  report_pulse_width -all_violators -file "${release_dir}/${build_name}_pulse_width.rpt"
-  set should_exit 1
+if {$CHECK_CDC} {
+  # Check for unhandled CDC
+  set clock_interaction_report [report_clock_interaction -delay_type "min_max" -no_header -return_string]
+  if {[string first "(unsafe)" ${clock_interaction_report}] != -1} {
+    puts "ERROR: Unhandled clock crossing after implementation run. See '${release_dir}/${build_name}_clock_interaction.rpt' and '${release_dir}/${build_name}_timing.rpt' reports."
+    set should_exit 1
+  }
+
+  # Check for critical CDC warnings
+  set cdc_report [report_cdc -return_string -no_header -details -severity "Critical"]
+  if {[string first "Critical" ${cdc_report}] != -1} {
+    puts "ERROR: Critical CDC rule violation after implementation run. See '${release_dir}/${build_name}_cdc.rpt' report."
+    set should_exit 1
+  }
+
+  if {${should_exit} eq 1} {
+    exit 1
+  }
 }
-
-# # Check for unhandled CDC
-# set clock_interaction_report [report_clock_interaction -delay_type "min_max" -no_header -return_string]
-# if {[string first "(unsafe)" ${clock_interaction_report}] != -1} {
-#   puts "ERROR: Unhandled clock crossing after implementation run. See '${release_dir}/${build_name}_clock_interaction.rpt' and '${release_dir}/${build_name}_timing.rpt' reports."
-#   set should_exit 1
-# }
-
-# # Check for critical CDC warnings
-# set cdc_report [report_cdc -return_string -no_header -details -severity "Critical"]
-# if {[string first "Critical" ${cdc_report}] != -1} {
-#   puts "ERROR: Critical CDC rule violation after implementation run. See '${release_dir}/${build_name}_cdc.rpt' report."
-#   set should_exit 1
-# }
-
-if {${should_exit} eq 1} {
-  exit 1
-}
-
 
 
 ################################################################################
@@ -281,7 +273,7 @@ if {${should_exit} eq 1} {
 
 # Copy bit file to build output directory
 set bit_file ${impl_dir}/${top_entity}.bit
-file copy -force $bit_file ${release_dir}/${build_name}.bit 
+file copy -force $bit_file ${release_dir}/${build_name}.bit
 
 # # Generate the flash configuration file
 # set mcs_file ${impl_dir}/${top_entity}.mcs
@@ -289,7 +281,7 @@ file copy -force $bit_file ${release_dir}/${build_name}.bit
 # file copy -force $mcs_file ${release_dir}/${build_name}.mcs
 
 # Generate the xsa
-write_hw_platform -force -fixed -include_bit -file ${release_dir}/${build_name}.xsa 
+write_hw_platform -force -fixed -include_bit -file ${release_dir}/${build_name}.xsa
 
 # Generate debug probes
 write_debug_probes -force ${release_dir}/${build_name}.ltx
@@ -320,7 +312,7 @@ Build Time \[hhmmss\]    : $build_time\n\
 Local Build (Not CI)   : $local_build\n\
 Development Build      : $dev_build\n\
 Git Dirty              : $git_dirty\n\
-Git Hash               : $git_hash\n" 
+Git Hash               : $git_hash\n"
 
 puts $fp $build_info_str
 close $fp

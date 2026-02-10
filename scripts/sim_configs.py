@@ -6,11 +6,14 @@
 # Project-specific VUnit sim config definitions
 ################################################################################
 
-import sim_utils
 from itertools import product
+
+import sim_utils
+
+
 
 ################################################################################
 # TB definitions and generic permutations
 ################################################################################
-def add_configs(lib): 
+def add_configs(lib):
     pass

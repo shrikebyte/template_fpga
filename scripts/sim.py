@@ -5,30 +5,30 @@
 # ==============================================================================
 # Common VUnit sim script
 ################################################################################
-
-from vunit import VUnit
-from pathlib import Path
 import os
 import sys
 from enum import Enum
+from pathlib import Path
 
 # Import test configurations
 # ..they are in a separate file so that this common sim script can be
 # maintained separately from repo-specific test configurations.
 import sim_configs
+from vunit import VUnit
 
 ################################################################################
 # Setup
 ################################################################################
-
 SCRIPT_DIR = Path(__file__).parent
 ROOT_DIR = SCRIPT_DIR.parent
+
 
 class Simulator(Enum):
     GHDL = 1
     NVC = 2
 
-#Execute from script directory
+
+# Execute from script directory
 os.chdir(SCRIPT_DIR)
 
 # Argument handling
@@ -50,11 +50,11 @@ if "--vhdl_ls" in sys.argv:
     argv.remove("--vhdl_ls")
 
 # The simulator must be chosen before sources are added
-if 'VUNIT_SIMULATOR' not in os.environ:    
+if "VUNIT_SIMULATOR" not in os.environ:
     if SIMULATOR == Simulator.GHDL:
-        os.environ['VUNIT_SIMULATOR'] = 'ghdl'
+        os.environ["VUNIT_SIMULATOR"] = "ghdl"
     elif SIMULATOR == Simulator.NVC:
-        os.environ['VUNIT_SIMULATOR'] = 'nvc'
+        os.environ["VUNIT_SIMULATOR"] = "nvc"
 
 # Parse VUnit Arguments
 vu = VUnit.from_argv(argv=argv)
@@ -66,35 +66,39 @@ vu.add_verification_components()
 # Add source files
 lib = vu.add_library("lib")
 lib.add_source_files(ROOT_DIR / "src" / "**" / "hdl" / "*.vhd", allow_empty=True)
-lib.add_source_files(ROOT_DIR / "lib" / "**" / "src" / "**" / "hdl" / "*.vhd", allow_empty=True)
+lib.add_source_files(
+    ROOT_DIR / "lib" / "**" / "src" / "**" / "hdl" / "*.vhd", allow_empty=True
+)
 lib.add_source_files(ROOT_DIR / "test" / "**" / "*.vhd", allow_empty=True)
-lib.add_source_files(ROOT_DIR / "build" / "regs_out" / "**" / "hdl" / "*.vhd", allow_empty=True)
+lib.add_source_files(
+    ROOT_DIR / "build" / "regs_out" / "**" / "hdl" / "*.vhd", allow_empty=True
+)
 
 if GENERATE_VHDL_LS_TOML:
-    lib.add_source_files(ROOT_DIR / "platforms" / "**" / "hdl" / "*.vhd", allow_empty=True)
+    lib.add_source_files(ROOT_DIR / "boards" / "**" / "hdl" / "*.vhd", allow_empty=True)
 
 
 ################################################################################
 # Test bench configurations
 ################################################################################
-
 sim_configs.add_configs(lib)
 
 
 ################################################################################
 # Execution
 ################################################################################
-
-lib.add_compile_option('ghdl.a_flags', ['-frelaxed-rules', '-Wno-hide', '-Wno-shared'])
-lib.add_compile_option('nvc.a_flags', ['--relaxed'])
-lib.set_sim_option('ghdl.elab_flags', ['-frelaxed'])
-lib.set_sim_option('nvc.heap_size', '5000M')
+lib.add_compile_option("ghdl.a_flags", ["-frelaxed-rules", "-Wno-hide", "-Wno-shared"])
+lib.add_compile_option("nvc.a_flags", ["--relaxed"])
+lib.set_sim_option("ghdl.elab_flags", ["-frelaxed"])
+lib.set_sim_option("nvc.heap_size", "5000M")
 
 # Generate VHDL LS Config if needed
 if GENERATE_VHDL_LS_TOML:
-    from create_vhdl_ls_config import create_configuration
     from pathlib import Path
-    create_configuration(output_path=Path('..'), vunit_proj=vu)
+
+    from create_vhdl_ls_config import create_configuration
+
+    create_configuration(output_path=Path(".."), vunit_proj=vu)
     exit(0)
 
 # Run

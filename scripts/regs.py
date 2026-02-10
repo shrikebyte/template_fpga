@@ -1,14 +1,7 @@
-import sys
 import os
+import sys
 from pathlib import Path
 
-from hdl_registers.parser.toml import from_toml
-from hdl_registers.generator.vhdl.axi_lite.wrapper import VhdlAxiLiteWrapperGenerator
-from hdl_registers.generator.vhdl.record_package import VhdlRecordPackageGenerator
-from hdl_registers.generator.vhdl.register_package import VhdlRegisterPackageGenerator
-from hdl_registers.generator.vhdl.simulation.check_package import VhdlSimulationCheckPackageGenerator
-from hdl_registers.generator.vhdl.simulation.read_write_package import VhdlSimulationReadWritePackageGenerator
-from hdl_registers.generator.vhdl.simulation.wait_until_package import VhdlSimulationWaitUntilPackageGenerator
 from hdl_registers.generator.c.header import CHeaderGenerator
 from hdl_registers.generator.cpp.header import CppHeaderGenerator
 from hdl_registers.generator.cpp.implementation import CppImplementationGenerator
@@ -18,8 +11,22 @@ from hdl_registers.generator.html.page import HtmlPageGenerator
 from hdl_registers.generator.html.register_table import HtmlRegisterTableGenerator
 from hdl_registers.generator.python.accessor import PythonAccessorGenerator
 from hdl_registers.generator.python.pickle import PythonPickleGenerator
+from hdl_registers.generator.vhdl.axi_lite.wrapper import VhdlAxiLiteWrapperGenerator
+from hdl_registers.generator.vhdl.record_package import VhdlRecordPackageGenerator
+from hdl_registers.generator.vhdl.register_package import VhdlRegisterPackageGenerator
+from hdl_registers.generator.vhdl.simulation.check_package import (
+    VhdlSimulationCheckPackageGenerator,
+)
+from hdl_registers.generator.vhdl.simulation.read_write_package import (
+    VhdlSimulationReadWritePackageGenerator,
+)
+from hdl_registers.generator.vhdl.simulation.wait_until_package import (
+    VhdlSimulationWaitUntilPackageGenerator,
+)
+from hdl_registers.parser.toml import from_toml
 
 THIS_DIR = Path(__file__).parent
+
 
 ################################################################################
 # Register generator text replacement
@@ -33,13 +40,11 @@ def replace_first_occurrence(file_path, old_text, new_text):
     new_content = text.replace(old_text, new_text, 1)
 
     if new_content == text:
-        #print("No match found.")
+        # print("No match found.")
         return
 
     path.write_text(new_content)
-    #print(f"Replaced first occurrence of:\n{old_text}\nwith:\n{new_text} in file:\n{path}")
-
-
+    # print(f"Replaced first occurrence of:\n{old_text}\nwith:\n{new_text} in file:\n{path}")
 
 
 OLD_TEXT_AXI_LITE_1 = """-- This VHDL file is a required dependency:
@@ -59,8 +64,6 @@ use work.hdlm_conv_pkg.all;
 """
 
 
-
-
 OLD_TEXT_AXI_LITE_2 = """    --# {}
     --# Register control bus.
     axi_lite_m2s : in axi_lite_m2s_t;
@@ -72,8 +75,6 @@ NEW_TEXT_AXI_LITE_2 = """    --# {}
     s_axil_req  : in    axil_req_t;
     s_axil_rsp  : out   axil_rsp_t;
 """
-
-
 
 
 OLD_TEXT_AXI_LITE_3 = """
@@ -99,14 +100,10 @@ begin
   axi_lite_register_file_inst : entity work.axi_lite_register_file"""
 
 
-
-
 OLD_TEXT_RECORD_PKG = """library register_file;
 use register_file.register_file_pkg.register_t;"""
 
 NEW_TEXT_RECORD_PKG = "use work.register_file_pkg.register_t;"
-
-
 
 
 OLD_TEXT_REGS_PKG = """library register_file;
@@ -131,19 +128,47 @@ def main(toml_files: list[Path]):
         register_list = from_toml(name=name, toml_file=toml_file)
 
         # VHDL
-        VhdlRegisterPackageGenerator(register_list=register_list, output_folder=hdl_output_dir).create_if_needed()
-        VhdlRecordPackageGenerator(register_list=register_list, output_folder=hdl_output_dir).create_if_needed()
-        VhdlAxiLiteWrapperGenerator(register_list=register_list, output_folder=hdl_output_dir).create_if_needed()
+        VhdlRegisterPackageGenerator(
+            register_list=register_list, output_folder=hdl_output_dir
+        ).create_if_needed()
+        VhdlRecordPackageGenerator(
+            register_list=register_list, output_folder=hdl_output_dir
+        ).create_if_needed()
+        VhdlAxiLiteWrapperGenerator(
+            register_list=register_list, output_folder=hdl_output_dir
+        ).create_if_needed()
         # We make some small edits to the generated VHDL so that it does not
         # depend on pre-defined VHDL namespaces
-        replace_first_occurrence(Path(hdl_output_dir / f"{name}_register_file_axi_lite.vhd"), OLD_TEXT_AXI_LITE_1, NEW_TEXT_AXI_LITE_1)
-        replace_first_occurrence(Path(hdl_output_dir / f"{name}_register_file_axi_lite.vhd"), OLD_TEXT_AXI_LITE_2, NEW_TEXT_AXI_LITE_2)
-        replace_first_occurrence(Path(hdl_output_dir / f"{name}_register_file_axi_lite.vhd"), OLD_TEXT_AXI_LITE_3, NEW_TEXT_AXI_LITE_3)
-        replace_first_occurrence(Path(hdl_output_dir / f"{name}_register_record_pkg.vhd"), OLD_TEXT_RECORD_PKG, NEW_TEXT_RECORD_PKG)
-        replace_first_occurrence(Path(hdl_output_dir / f"{name}_regs_pkg.vhd"), OLD_TEXT_REGS_PKG, NEW_TEXT_REGS_PKG)
+        replace_first_occurrence(
+            Path(hdl_output_dir / f"{name}_register_file_axi_lite.vhd"),
+            OLD_TEXT_AXI_LITE_1,
+            NEW_TEXT_AXI_LITE_1,
+        )
+        replace_first_occurrence(
+            Path(hdl_output_dir / f"{name}_register_file_axi_lite.vhd"),
+            OLD_TEXT_AXI_LITE_2,
+            NEW_TEXT_AXI_LITE_2,
+        )
+        replace_first_occurrence(
+            Path(hdl_output_dir / f"{name}_register_file_axi_lite.vhd"),
+            OLD_TEXT_AXI_LITE_3,
+            NEW_TEXT_AXI_LITE_3,
+        )
+        replace_first_occurrence(
+            Path(hdl_output_dir / f"{name}_register_record_pkg.vhd"),
+            OLD_TEXT_RECORD_PKG,
+            NEW_TEXT_RECORD_PKG,
+        )
+        replace_first_occurrence(
+            Path(hdl_output_dir / f"{name}_regs_pkg.vhd"),
+            OLD_TEXT_REGS_PKG,
+            NEW_TEXT_REGS_PKG,
+        )
 
         # C Header
-        CHeaderGenerator(register_list=register_list, output_folder=output_dir).create_if_needed()
+        CHeaderGenerator(
+            register_list=register_list, output_folder=output_dir
+        ).create_if_needed()
 
         # C++
         # CppInterfaceGenerator(register_list=register_list, output_folder=output_dir / "include").create_if_needed()
@@ -151,7 +176,9 @@ def main(toml_files: list[Path]):
         # CppImplementationGenerator(register_list=register_list, output_folder=output_dir).create_if_needed()
 
         # HTML
-        HtmlPageGenerator(register_list=register_list, output_folder=output_dir).create_if_needed()
+        HtmlPageGenerator(
+            register_list=register_list, output_folder=output_dir
+        ).create_if_needed()
         # HtmlRegisterTableGenerator(register_list=register_list, output_folder=output_dir).create_if_needed()
         # HtmlConstantTableGenerator(register_list=register_list, output_folder=output_dir).create_if_needed()
 

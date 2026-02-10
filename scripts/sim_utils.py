@@ -6,6 +6,7 @@
 # Common VUnit sim utilities
 ################################################################################
 
-def named_config(tb, map : dict):
+
+def named_config(tb, map: dict):
     cfg_name = "-".join([f"{k}={v}" for k, v in map.items()])
-    tb.add_config(name=cfg_name, generics = map)
+    tb.add_config(name=cfg_name, generics=map)
