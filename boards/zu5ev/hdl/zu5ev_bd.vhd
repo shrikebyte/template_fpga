@@ -1,5 +1,5 @@
 --##############################################################################
---# File : bd_wrapper.vhd
+--# File : zu5ev_bd.vhd
 --# Auth : David Gussler
 --# Lang : VHDL'08
 --# ============================================================================
@@ -9,11 +9,11 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-library unisim;
-use unisim.vcomponents.all;
+-- library unisim;
+-- use unisim.vcomponents.all;
 use work.util_pkg.all;
 
-entity bd_wrapper is
+entity zu5ev_bd is
   port (
     clk_100m  : out   std_logic;
     srst_100m : out   std_logic;
@@ -26,7 +26,7 @@ entity bd_wrapper is
   );
 end entity;
 
-architecture rtl of bd_wrapper is
+architecture rtl of zu5ev_bd is
 
   component bd is
     port (

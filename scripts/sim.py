@@ -69,6 +69,9 @@ lib.add_source_files(ROOT_DIR / "src" / "**" / "hdl" / "*.vhd", allow_empty=True
 lib.add_source_files(
     ROOT_DIR / "lib" / "**" / "src" / "**" / "hdl" / "*.vhd", allow_empty=True
 )
+lib.add_source_files(
+    ROOT_DIR / "lib" / "**" / "src" / "**" / "sim" / "*.vhd", allow_empty=True
+)
 lib.add_source_files(ROOT_DIR / "test" / "**" / "*.vhd", allow_empty=True)
 lib.add_source_files(
     ROOT_DIR / "build" / "regs_out" / "**" / "hdl" / "*.vhd", allow_empty=True

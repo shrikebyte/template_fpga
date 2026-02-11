@@ -117,7 +117,7 @@ begin
   );
 
   -- ---------------------------------------------------------------------------
-  u_axil_bfm : entity work.axil_bfm
+  u_axil_bfm : entity work.bfm_axil_man
   generic map (
     G_BUS_HANDLE => AXIM
   )
@@ -128,4 +128,3 @@ begin
   );
 
 end architecture;
-

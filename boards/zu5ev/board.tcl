@@ -4,9 +4,9 @@
 set board_dir [file dirname [info script]]
 set root_dir [file normalize $board_dir/../..]
 
-set FPGA_PART "xc7a35tcpg236-1"
-set FPGA_TOP "basys3_fpga"
-set FPGA_ID "00000008"
+set FPGA_PART "xczu5ev-sfvc784-1-e"
+set FPGA_TOP "zu5ev_fpga"
+set FPGA_ID "00000007"
 set SYNTH_STRATEGY "Vivado Synthesis Defaults"
 set IMPL_STRATEGY "Vivado Implementation Defaults"
 set CHECK_TIMING true

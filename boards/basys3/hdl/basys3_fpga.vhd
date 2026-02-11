@@ -1,5 +1,5 @@
 --##############################################################################
---# File : fpga.vhd
+--# File : basys3_fpga.vhd
 --# Auth : David Gussler
 --# Lang : VHDL'08
 --# ============================================================================
@@ -11,7 +11,7 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use work.util_pkg.all;
 
-entity fpga is
+entity basys3_fpga is
   generic (
     G_DEVICE_ID   : std_logic_vector(31 downto 0) := x"DEAD_BEEF";
     G_VER_MAJOR   : integer range 0 to 255        := 255;
@@ -34,7 +34,7 @@ entity fpga is
   );
 end entity;
 
-architecture rtl of fpga is
+architecture rtl of basys3_fpga is
 
   signal clk_100m     : std_logic;
   signal srst_100m    : std_logic;
@@ -48,7 +48,7 @@ architecture rtl of fpga is
 begin
 
   -- ---------------------------------------------------------------------------
-  u_bd_wrapper : entity work.bd_wrapper
+  basys3_bd_inst : entity work.basys3_bd
   port map (
     clk_100m      => clk_100m,
     srst_100m     => srst_100m,
@@ -61,7 +61,7 @@ begin
   );
 
   -- ---------------------------------------------------------------------------
-  u_axil_xbar : entity work.axil_xbar
+  axil_xbar_inst : entity work.axil_xbar
   generic map (
     G_NUM_MASTERS => 1,
     G_NUM_SLAVES  => 2,
@@ -79,7 +79,7 @@ begin
   );
 
   -- ---------------------------------------------------------------------------
-  u_stdver_axil : entity work.stdver_axil
+  stdver_axil_inst : entity work.stdver_axil
   generic map (
     G_DEVICE_ID   => G_DEVICE_ID,
     G_VER_MAJOR   => G_VER_MAJOR,
@@ -100,7 +100,7 @@ begin
   );
 
   -- ---------------------------------------------------------------------------
-  u_adder : entity work.adder
+  adder_inst : entity work.adder
   port map (
     clk        => clk_100m,
     srst       => srst_100m,
@@ -108,6 +108,16 @@ begin
     s_axil_rsp => axil_rsp_add
   );
 
-
+  -- ---------------------------------------------------------------------------
+  cdc_bit_inst : entity work.cdc_bit
+  generic map (
+    G_USE_SRC_REG => false,
+    G_EXTRA_SYNC  => 0
+  )
+  port map (
+    src_bit(0) => i_gpio0,
+    dst_clk    => clk_100m,
+    dst_bit(0) => o_gpio1
+  );
 
 end architecture;

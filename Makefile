@@ -23,9 +23,9 @@ VER_PATCH := 1
 
 # Required project build tool versions
 REQUIRE_VIVADO_VER := v2024.2
-REQUIRE_REGS_VER   := 8.0.0
-REQUIRE_VSG_VER    := 3.30.0
-REQUIRE_VUNIT_VER  := 5.0.0.dev6
+REQUIRE_REGS_VER   := 8.1.0
+REQUIRE_VSG_VER    := 3.35.0
+REQUIRE_VUNIT_VER  := 5.0.0.dev7
 
 
 # Select the target board to build. Must match one of the
@@ -72,21 +72,21 @@ BOARD_DIR := $(MAKEFILE_DIR)boards
 VER_STRING := v$(VER_MAJOR).$(VER_MINOR).$(VER_PATCH)
 BUILD_NAME := $(PROJECT_NAME)_$(VER_STRING)-$(BOARD)
 RELEASE_DIR := $(BUILD_DIR)/$(BUILD_NAME)
-REGS_SRC := $(SRC_DIR)/*/regs/*.toml $(LIB_DIR)/sblib-open/src/*/regs/*.toml
-STYLE_SRC := $(SRC_DIR)/*/hdl/*.vhd $(PLATS_DIR)/*/hdl/*.vhd $(TEST_DIR)/*/*.vhd
+REGS_SRC := $(SRC_DIR)/*/regs/*.toml $(LIB_DIR)/sblib/src/*/regs/*.toml
+STYLE_SRC := $(SRC_DIR)/*/hdl/*.vhd $(BOARD_DIR)/*/hdl/*.vhd $(TEST_DIR)/*/*.vhd
 
 # Phony rules
-.PHONY: package build release lint proj sim regs style style-fix tool-check clean update-libs all
+.PHONY: package build release lint proj sim regs style style-fix tool-check clean all
 
 
 # Run the complete build procedure for ALL boards
 all:
 	$(MAKE) tool-check
 	@{ \
-	for plat in $(BOARD_LIST); do \
-		$(MAKE) proj BOARD=$${plat} JOBS=$(JOBS); \
-		$(MAKE) build BOARD=$${plat} JOBS=$(JOBS); \
-		$(MAKE) package BOARD=$${plat} JOBS=$(JOBS); \
+	for board in $(BOARD_LIST); do \
+		$(MAKE) proj BOARD=$${board} JOBS=$(JOBS); \
+		$(MAKE) build BOARD=$${board} JOBS=$(JOBS); \
+		$(MAKE) package BOARD=$${board} JOBS=$(JOBS); \
 	done; \
 	}
 
@@ -103,34 +103,31 @@ tool-check:
 package: regs
 	cd $(BUILD_DIR) && tar -czvf $(BUILD_NAME).tar.gz $(BUILD_NAME)
 
-update-libs:
-	git subtree pull --prefix lib/sblib-open https://github.com/shrikebyte/sblib-open.git main --squash
-
 # Build the FPGA with Vivado
 build: regs
-	cd tools && vivado -mode batch -nojournal -nolog -notrace -source build.tcl -tclargs $(PROJECT_NAME) $(BOARD) $(VER_MAJOR) $(VER_MINOR) $(VER_PATCH) $(JOBS)
+	cd scripts && vivado -mode batch -nojournal -nolog -notrace -source build.tcl -tclargs $(PROJECT_NAME) $(BOARD) $(VER_MAJOR) $(VER_MINOR) $(VER_PATCH) $(JOBS)
 
 # Create the FPGA Vivado project
 proj: regs
-	cd tools && vivado -mode batch -nojournal -nolog -notrace -source proj.tcl -tclargs $(PROJECT_NAME) $(BOARD)
+	cd scripts && vivado -mode batch -nojournal -nolog -notrace -source proj.tcl -tclargs $(PROJECT_NAME) $(BOARD)
 
 # Run the VUnit simulation
 sim: regs
-	cd tools && python sim.py --xunit-xml $(BUILD_DIR)/sim_report.xml
+	cd scripts && python sim.py --xunit-xml $(BUILD_DIR)/sim_report.xml
 
 # Check the coding style of the VHDL src files
 style:
 	mkdir -p $(BUILD_DIR)
-	vsg -f $(STYLE_SRC) -c ./tools/vsg_rules.yaml -of vsg --all_phases --quality_report $(BUILD_DIR)/style_report.json
+	vsg -f $(STYLE_SRC) -c ./scripts/vsg_rules.yaml -of vsg --all_phases --quality_report $(BUILD_DIR)/style_report.json
 
 # Check AND FIX the coding style of the VHDL src files
 style-fix:
 	mkdir -p $(BUILD_DIR)
-	vsg -f $(STYLE_SRC) -c ./tools/vsg_rules.yaml -of vsg --fix
+	vsg -f $(STYLE_SRC) -c ./scripts/vsg_rules.yaml -of vsg --fix
 
 # Generate the register output products
 regs:
-	cd tools && python regs.py $(REGS_SRC)
+	cd scripts && python regs.py $(REGS_SRC)
 
 # Create a new git tag and Github release for this version of the code. A Github
 # action will generate the release from source.

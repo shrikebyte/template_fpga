@@ -109,6 +109,17 @@ proc getDevBuildStatus {} {
 }
 
 
+# Print the last N lines of a file
+proc tail {filename {num_lines 20}} {
+  set fp [open $filename r]
+  set content [read $fp]
+  close $fp
+  set lines [split $content "\n"]
+  set last_n [lrange $lines end-[expr {$num_lines - 1}] end]
+  puts [join $last_n "\n"]
+}
+
+
 ################################################################################
 # Setup variables
 ################################################################################
@@ -136,7 +147,9 @@ set git_hash [lindex $git_dirty_hash 1]
 set local_build [getLocalBuildStatus]
 set dev_build [getDevBuildStatus]
 set proj_dir [file normalize ${root_dir}/build/vivado_out/${proj_name}_${board_name}]
-set release_dir [file normalize ${root_dir}/build/${build_name}]
+set board_dir [file normalize ${root_dir}/boards/${board_name}]
+
+source $board_dir/board.tcl
 
 foreach value [list $ver_major $ver_minor $ver_patch] {
   if { $value < 0 || $value > 255 } {
@@ -148,7 +161,8 @@ puts "Major version: $ver_major"
 puts "Minor version: $ver_minor"
 puts "Patch version: $ver_patch"
 set ver_string "v${ver_major}.${ver_minor}.${ver_patch}"
-
+set build_name ${proj_name}_${ver_string}-${board_name}
+set release_dir [file normalize ${root_dir}/build/${build_name}]
 
 ################################################################################
 # Run the build
@@ -183,6 +197,9 @@ set_property generic " \
   G_BUILD_TIME=24'h$build_time \
 " [current_fileset]
 
+# Run strategies
+set_property strategy $SYNTH_STRATEGY [get_runs synth_1]
+set_property strategy $IMPL_STRATEGY [get_runs impl_1]
 
 # Synthesis
 reset_runs synth_1
@@ -193,7 +210,8 @@ wait_on_runs [get_runs synth_1] -quiet
 set synth_dir [get_property DIRECTORY [current_run -synthesis]]
 if {[get_property STATUS [get_runs synth_1]] != "synth_design Complete!"} {
   file copy -force ${synth_dir}/${top_entity}.vds ${release_dir}/${build_name}_synth.log
-  puts "ERROR: Synthesis FAILED. See ${release_dir}/${build_name}_synth.log."
+  puts "ERROR: Synthesis FAILED. See ${release_dir}/${build_name}_synth.log"
+  tail ${release_dir}/${build_name}_synth.log 80
   exit 1
 }
 
@@ -206,7 +224,8 @@ set impl_dir [get_property DIRECTORY [current_run -implementation]]
 if {[get_property STATUS [get_runs impl_1]] != "write_bitstream Complete!"} {
   file copy -force ${synth_dir}/${top_entity}.vds ${release_dir}/${build_name}_synth.log
   file copy -force ${impl_dir}/${top_entity}.vdi ${release_dir}/${build_name}_impl.log
-  puts "ERROR: Implementation FAILED. See ${release_dir}/${build_name}_impl.log."
+  puts "ERROR: Implementation FAILED. See ${release_dir}/${build_name}_impl.log"
+  tail ${release_dir}/${build_name}_impl.log 80
   exit 1
 }
 
@@ -234,14 +253,16 @@ if {$CHECK_TIMING} {
   # Check for negative slack
   set slack [get_property SLACK [get_timing_paths -delay_type "min_max"]]
   if {${slack} != "" && [expr {${slack} < 0}]} {
-    puts "ERROR: Setup/hold timing negative slack after implementation run. See '${release_dir}/${build_name}_timing.rpt' report."
+    puts "ERROR: Setup/hold timing negative slack after implementation run. See ${release_dir}/${build_name}_timing.rpt"
+    tail ${release_dir}/${build_name}_timing.rpt 80
     set should_exit 1
   }
 
   # Check for pulse width violations
   if {[report_pulse_width -return_string -all_violators -no_header] != ""} {
-    puts "ERROR: Pulse width timing violation after implementation run. See '${release_dir}/${build_name}_pulse_width.rpt' report."
+    puts "ERROR: Pulse width timing violation after implementation run. See ${release_dir}/${build_name}_pulse_width.rpt"
     report_pulse_width -all_violators -file "${release_dir}/${build_name}_pulse_width.rpt"
+    tail ${release_dir}/${build_name}_pulse_width.rpt 80
     set should_exit 1
   }
 }
@@ -250,14 +271,14 @@ if {$CHECK_CDC} {
   # Check for unhandled CDC
   set clock_interaction_report [report_clock_interaction -delay_type "min_max" -no_header -return_string]
   if {[string first "(unsafe)" ${clock_interaction_report}] != -1} {
-    puts "ERROR: Unhandled clock crossing after implementation run. See '${release_dir}/${build_name}_clock_interaction.rpt' and '${release_dir}/${build_name}_timing.rpt' reports."
+    puts "ERROR: Unhandled clock crossing after implementation run. See ${release_dir}/${build_name}_clock_interaction.rpt & ${release_dir}/${build_name}_timing.rpt"
     set should_exit 1
   }
 
   # Check for critical CDC warnings
   set cdc_report [report_cdc -return_string -no_header -details -severity "Critical"]
   if {[string first "Critical" ${cdc_report}] != -1} {
-    puts "ERROR: Critical CDC rule violation after implementation run. See '${release_dir}/${build_name}_cdc.rpt' report."
+    puts "ERROR: Critical CDC rule violation after implementation run. See ${release_dir}/${build_name}_cdc.rpt"
     set should_exit 1
   }
 
@@ -297,26 +318,24 @@ set build_time_hrs [format "%02d" [expr $build_time_total_sec / 3600]]
 set build_time_min [format "%02d" [expr $build_time_total_sec % 3600 / 60]]
 set build_time_sec [format "%02d" [expr $build_time_total_sec % 60]]
 
-
-set fp [open "${release_dir}/${build_name}_build_info.rpt" w+]
-set build_info_str "\
-------====== Build report for the $build_name FPGA ======------\n\
-Build Machine Name     : $host_name\n\
-Build Threads          : $num_cpus\n\
-Device ID              : $device_id\n\
-Project Directory      : [file normalize $script_dir]\n\
-Output Directory       : [file normalize $release_dir]\n\
-Build Timer \[hh:mm:ss\] : ${build_time_hrs}:${build_time_min}:${build_time_sec}\n\
-Build Date \[yyyymmdd\]  : $build_date\n\
-Build Time \[hhmmss\]    : $build_time\n\
-Local Build (Not CI)   : $local_build\n\
-Development Build      : $dev_build\n\
-Git Dirty              : $git_dirty\n\
-Git Hash               : $git_hash\n"
-
+set build_info [list \
+  "------====== Build report for the $build_name FPGA ======------" \
+  "Build Machine Name       : $host_name" \
+  "Build Threads            : $num_cpus" \
+  "Device ID                : $FPGA_ID" \
+  "Project Directory        : [file normalize $script_dir]" \
+  "Output Directory         : [file normalize $release_dir]" \
+  "Build Timer \[hh:mm:ss\] : ${build_time_hrs}:${build_time_min}:${build_time_sec}" \
+  "Build Date \[yyyymmdd\]  : $build_date" \
+  "Build Time \[hhmmss\]    : $build_time" \
+  "Local Build (Not CI)     : $local_build" \
+  "Development Build        : $dev_build" \
+  "Git Dirty                : $git_dirty" \
+  "Git Hash                 : $git_hash" \
+]
+set build_info_str [join $build_info "\n"]
+set fp [open "${release_dir}/${build_name}_build_info.rpt" w]
 puts $fp $build_info_str
 close $fp
-
-puts $build_info_str
-puts ""
+puts "\n$build_info_str\n"
 puts "All done... Great success!"
