@@ -34,10 +34,6 @@ REQUIRE_VUNIT_VER  := 5.0.0.dev7
 # and make all of the target boards.
 BOARD ?= basys3
 
-# Number of processor threads to use for builds
-JOBS ?= 16
-
-
 
 ################################################################################
 # Rules
@@ -74,10 +70,10 @@ BUILD_NAME := $(PROJECT_NAME)_$(VER_STRING)-$(BOARD)
 RELEASE_DIR := $(BUILD_DIR)/$(BUILD_NAME)
 REGS_SRC := $(SRC_DIR)/*/regs/*.toml $(LIB_DIR)/sblib/src/*/regs/*.toml
 STYLE_SRC := $(SRC_DIR)/*/hdl/*.vhd $(BOARD_DIR)/*/hdl/*.vhd $(TEST_DIR)/*/*.vhd
+JOBS ?= 16
 
 # Phony rules
-.PHONY: package build release lint proj sim regs style style-fix tool-check clean all
-
+.PHONY: package build release proj sim regs style style-fix tool-check clean all
 
 # Run the complete build procedure for ALL boards
 all:
@@ -105,11 +101,17 @@ package: regs
 
 # Build the FPGA with Vivado
 build: regs
-	cd scripts && vivado -mode batch -nojournal -nolog -notrace -source build.tcl -tclargs $(PROJECT_NAME) $(BOARD) $(VER_MAJOR) $(VER_MINOR) $(VER_PATCH) $(JOBS)
+	cd scripts && vivado -mode batch -nojournal -nolog -notrace \
+	-source build.tcl \
+	-tclargs $(PROJECT_NAME) $(BOARD) \
+	$(VER_MAJOR) $(VER_MINOR) $(VER_PATCH) \
+	$(JOBS)
 
 # Create the FPGA Vivado project
 proj: regs
-	cd scripts && vivado -mode batch -nojournal -nolog -notrace -source proj.tcl -tclargs $(PROJECT_NAME) $(BOARD)
+	cd scripts && vivado -mode batch -nojournal -nolog -notrace \
+	-source proj.tcl \
+	-tclargs $(PROJECT_NAME) $(BOARD)
 
 # Run the VUnit simulation
 sim: regs
@@ -118,12 +120,19 @@ sim: regs
 # Check the coding style of the VHDL src files
 style:
 	mkdir -p $(BUILD_DIR)
-	vsg -f $(STYLE_SRC) -c ./scripts/vsg_rules.yaml -of vsg --all_phases --quality_report $(BUILD_DIR)/style_report.json
+	vsg -f $(STYLE_SRC) \
+	-c ./scripts/vsg_rules.yaml \
+	-of vsg \
+	--all_phases \
+	--quality_report $(BUILD_DIR)/style_report.json
 
 # Check AND FIX the coding style of the VHDL src files
 style-fix:
 	mkdir -p $(BUILD_DIR)
-	vsg -f $(STYLE_SRC) -c ./scripts/vsg_rules.yaml -of vsg --fix
+	vsg -f $(STYLE_SRC) \
+	-c ./scripts/vsg_rules.yaml \
+	-of vsg \
+	--fix
 
 # Generate the register output products
 regs:

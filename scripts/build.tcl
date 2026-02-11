@@ -325,9 +325,9 @@ set build_info [list \
   "Device ID                : $FPGA_ID" \
   "Project Directory        : [file normalize $script_dir]" \
   "Output Directory         : [file normalize $release_dir]" \
-  "Build Timer \[hh:mm:ss\] : ${build_time_hrs}:${build_time_min}:${build_time_sec}" \
-  "Build Date \[yyyymmdd\]  : $build_date" \
-  "Build Time \[hhmmss\]    : $build_time" \
+  "Build Timer \[hh:mm:ss\]   : ${build_time_hrs}:${build_time_min}:${build_time_sec}" \
+  "Build Date \[yyyymmdd\]    : $build_date" \
+  "Build Time \[hhmmss\]      : $build_time" \
   "Local Build (Not CI)     : $local_build" \
   "Development Build        : $dev_build" \
   "Git Dirty                : $git_dirty" \

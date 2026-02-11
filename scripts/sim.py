@@ -5,6 +5,7 @@
 # ==============================================================================
 # Common VUnit sim script
 ################################################################################
+
 import os
 import sys
 from enum import Enum
@@ -19,6 +20,7 @@ from vunit import VUnit
 ################################################################################
 # Setup
 ################################################################################
+
 SCRIPT_DIR = Path(__file__).parent
 ROOT_DIR = SCRIPT_DIR.parent
 
@@ -33,7 +35,7 @@ os.chdir(SCRIPT_DIR)
 
 # Argument handling
 argv = sys.argv[1:]
-SIMULATOR = Simulator.GHDL
+SIMULATOR = Simulator.NVC
 GENERATE_VHDL_LS_TOML = False
 
 # Simulator Selection
@@ -57,15 +59,17 @@ if "VUNIT_SIMULATOR" not in os.environ:
         os.environ["VUNIT_SIMULATOR"] = "nvc"
 
 # Parse VUnit Arguments
-vu = VUnit.from_argv(argv=argv)
+vu = VUnit.from_argv(argv=argv, vhdl_standard="2019")
 vu.add_vhdl_builtins()
 vu.add_com()
 vu.add_osvvm()
+vu.add_random()
 vu.add_verification_components()
 
 # Add source files
 lib = vu.add_library("lib")
 lib.add_source_files(ROOT_DIR / "src" / "**" / "hdl" / "*.vhd", allow_empty=True)
+lib.add_source_files(ROOT_DIR / "src" / "**" / "sim" / "*.vhd", allow_empty=True)
 lib.add_source_files(
     ROOT_DIR / "lib" / "**" / "src" / "**" / "hdl" / "*.vhd", allow_empty=True
 )
@@ -84,16 +88,23 @@ if GENERATE_VHDL_LS_TOML:
 ################################################################################
 # Test bench configurations
 ################################################################################
+
 sim_configs.add_configs(lib)
 
 
 ################################################################################
 # Execution
 ################################################################################
+
 lib.add_compile_option("ghdl.a_flags", ["-frelaxed-rules", "-Wno-hide", "-Wno-shared"])
 lib.add_compile_option("nvc.a_flags", ["--relaxed"])
+lib.set_sim_option("disable_ieee_warnings", True)
 lib.set_sim_option("ghdl.elab_flags", ["-frelaxed"])
-lib.set_sim_option("nvc.heap_size", "5000M")
+lib.set_sim_option("ghdl.viewer.gui", "surfer")
+lib.set_sim_option("nvc.heap_size", "4096m")
+lib.set_sim_option("nvc.viewer.gui", "surfer")
+lib.set_sim_option("nvc.sim_flags", ["--dump-arrays"])
+
 
 # Generate VHDL LS Config if needed
 if GENERATE_VHDL_LS_TOML:
@@ -101,6 +112,7 @@ if GENERATE_VHDL_LS_TOML:
 
     from create_vhdl_ls_config import create_configuration
 
+    create_configuration(output_path=Path(".."), vunit_proj=vu)
     create_configuration(output_path=Path(".."), vunit_proj=vu)
     exit(0)
 

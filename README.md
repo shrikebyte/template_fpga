@@ -13,10 +13,10 @@ This repository is hosted on [GitHub](https://github.com/shrikebyte/template_fpg
 ### Install Project Tools
 
 - Vivado 2024.2
-- HDL Registers 8.0.0
-- VHDL Style Guide 3.30.0
-- VUnit 5.0.0.dev6
-- GHDL latest
+- HDL Registers 8.1.0
+- VHDL Style Guide 3.35.0
+- VUnit 5.0.0.dev7
+- NVC latest
 
 #### Install Vivado
 
@@ -26,21 +26,19 @@ For detailed instructions, including hardware and OS requirements, see [Xilinx U
 
 #### Install Python Tools
 
-Assuming python3 and pip3 are already available on the system, run the following command to install the python tools. Optionally, you may want to use a python virtual environment.
+Assuming a relatively recent version of python3 and pip3 are already available on the system, run the following command to install the python tools. Optionally, you may want to use a python virtual environment.
 
-`python -m pip install hdl_registers==8.0.0 vsg==3.30.0 vunit_hdl==5.0.0.dev6`
+`python -m pip install hdl_registers==8.1.0 vsg==3.35.0 vunit_hdl==5.0.0.dev7`
 
-#### Install GHDL
+#### Install NVC
 
-GHDL is an open-source VHDL simulator.
+NVC is an open-source VHDL simulator.
 
 The latest version can be compiled from source and manually installed by cloning, building, and installing the open-source repo (recommended):
 
-`git clone https://github.com/ghdl/ghdl.git`
+`git clone https://github.com/nickg/nvc.git`
 
-Alternatively, if using a Debian-based distro, an older version of GHDL can be installed with:
-
-`apt install ghdl`
+Alternatively, a pre-compiled release can be downloaded from [Github](https://github.com/nickg/nvc/releases), however, this is a rapidly evolving project so compiling the most up-to-date code yourself is the recommended approach.
 
 ### Test
 
