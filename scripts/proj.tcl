@@ -11,12 +11,15 @@ if { $argc != 2 } {
 }
 set proj_name [lindex $argv 0]
 set board_name [lindex $argv 1]
-
 set script_dir [file normalize [file dirname [info script]]]
 set root_dir [file normalize ${script_dir}/../]
 set board_dir [file normalize ${root_dir}/boards/${board_name}]
 set proj_dir [file normalize ${root_dir}/build/vivado_out/${proj_name}_${board_name}]
 
+if {![file exists $board_dir/board.tcl]} {
+  puts "ERROR: Board configuration not found: $board_dir/board.tcl"
+  exit 1
+}
 source $board_dir/board.tcl
 
 create_project -force ${proj_name}_${board_name} $proj_dir -part $FPGA_PART

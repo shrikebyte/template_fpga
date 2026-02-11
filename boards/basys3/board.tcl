@@ -14,7 +14,6 @@ set CHECK_CDC false
 
 set SRC_HDL [glob \
   $root_dir/lib/sblib/src/util/hdl/util_pkg.vhd \
-  $root_dir/lib/sblib/src/util/hdl/irq_reg.vhd \
   $root_dir/lib/sblib/src/cdc/hdl/cdc_bit.vhd \
   $root_dir/lib/sblib/src/hdlm/hdl/* \
   $root_dir/lib/sblib/src/bus/hdl/axil_arbiter.vhd \

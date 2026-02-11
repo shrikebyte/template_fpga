@@ -108,7 +108,6 @@ proc getDevBuildStatus {} {
   return $dev_build
 }
 
-
 # Print the last N lines of a file
 proc tail {filename {num_lines 20}} {
   set fp [open $filename r]
@@ -119,21 +118,42 @@ proc tail {filename {num_lines 20}} {
   puts [join $last_n "\n"]
 }
 
+# Parse version string
+proc parse_version {version_string} {
+  set parts [split $version_string "."]
+
+  if {[llength $parts] != 3} {
+    error "Invalid version format: $version_string (expected X.Y.Z)"
+  }
+
+  foreach value $parts {
+    if { $value < 0 || $value > 255 } {
+      puts "ERROR: version number out of range (0-255): $value"
+      exit 1
+    }
+  }
+
+  # Return as dict or list
+  return [dict create \
+    major [lindex $parts 0] \
+    minor [lindex $parts 1] \
+    patch [lindex $parts 2] \
+  ]
+}
+
 
 ################################################################################
 # Setup variables
 ################################################################################
-if { $argc != 6 } {
-  puts "ERROR: Script usage - build.tcl <project_name> <board_name> <ver_maj> <ver_min> <ver_pat> <jobs>"
+
+if { $argc != 4 } {
+  puts "ERROR: Script usage - build.tcl <project_name> <board_name> <project_version> <jobs>"
   exit
 }
 set proj_name [lindex $argv 0]
 set board_name [lindex $argv 1]
-set ver_major [lindex $argv 2]
-set ver_minor [lindex $argv 3]
-set ver_patch [lindex $argv 4]
-set num_cpus  [lindex $argv 5]
-
+set proj_ver [lindex $argv 2]
+set num_cpus  [lindex $argv 3]
 set build_time_start [clock seconds]
 set host_name [info hostname]
 set script_dir [file normalize [file dirname [info script]]]
@@ -148,21 +168,19 @@ set local_build [getLocalBuildStatus]
 set dev_build [getDevBuildStatus]
 set proj_dir [file normalize ${root_dir}/build/vivado_out/${proj_name}_${board_name}]
 set board_dir [file normalize ${root_dir}/boards/${board_name}]
-
-source $board_dir/board.tcl
-
-foreach value [list $ver_major $ver_minor $ver_patch] {
-  if { $value < 0 || $value > 255 } {
-    puts "ERROR: version number out of range (0-255): $value"
-    exit 1
-  }
-}
-puts "Major version: $ver_major"
-puts "Minor version: $ver_minor"
-puts "Patch version: $ver_patch"
-set ver_string "v${ver_major}.${ver_minor}.${ver_patch}"
+set ver_info [parse_version $proj_ver]
+set ver_major [dict get $ver_info major]
+set ver_minor [dict get $ver_info minor]
+set ver_patch [dict get $ver_info patch]
+set ver_string "v$proj_ver"
 set build_name ${proj_name}_${ver_string}-${board_name}
 set release_dir [file normalize ${root_dir}/build/${build_name}]
+
+if {![file exists $board_dir/board.tcl]} {
+  puts "ERROR: Board configuration not found: $board_dir/board.tcl"
+  exit 1
+}
+source $board_dir/board.tcl
 
 ################################################################################
 # Run the build
@@ -228,7 +246,6 @@ if {[get_property STATUS [get_runs impl_1]] != "write_bitstream Complete!"} {
   tail ${release_dir}/${build_name}_impl.log 80
   exit 1
 }
-
 
 
 ################################################################################

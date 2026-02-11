@@ -10,29 +10,18 @@
 # Configuration Settings
 ################################################################################
 
+# Project info
 PROJECT_NAME := template
+PROJECT_VERSION := 0.1.1
 
-# FPGA Project Version
-# Use semantic versioning with respect to the register API. Each version
-# variable may range from 0 to 255.
-# Update the version and add appropriate notes to the CHANGELOG.md each time
-# a new tag is released
-VER_MAJOR := 0
-VER_MINOR := 1
-VER_PATCH := 1
+# Default board
+BOARD ?= basys3
 
-# Required project build tool versions
+# Required build tool versions
 REQUIRE_VIVADO_VER := v2024.2
 REQUIRE_REGS_VER   := 8.1.0
 REQUIRE_VSG_VER    := 3.35.0
 REQUIRE_VUNIT_VER  := 5.0.0.dev7
-
-
-# Select the target board to build. Must match one of the
-# directories in "boards". This variable can be set from the command line,
-# for example "make BOARD=basys3". Running "make all" will automatically find
-# and make all of the target boards.
-BOARD ?= basys3
 
 
 ################################################################################
@@ -65,12 +54,12 @@ BUILD_DIR := $(MAKEFILE_DIR)build
 DOC_DIR := $(MAKEFILE_DIR)doc
 LIB_DIR := $(MAKEFILE_DIR)lib
 BOARD_DIR := $(MAKEFILE_DIR)boards
-VER_STRING := v$(VER_MAJOR).$(VER_MINOR).$(VER_PATCH)
+VER_STRING := v$(PROJECT_VERSION)
 BUILD_NAME := $(PROJECT_NAME)_$(VER_STRING)-$(BOARD)
 RELEASE_DIR := $(BUILD_DIR)/$(BUILD_NAME)
 REGS_SRC := $(SRC_DIR)/*/regs/*.toml $(LIB_DIR)/sblib/src/*/regs/*.toml
 STYLE_SRC := $(SRC_DIR)/*/hdl/*.vhd $(BOARD_DIR)/*/hdl/*.vhd $(TEST_DIR)/*/*.vhd
-JOBS ?= 16
+JOBS ?= 8
 
 # Phony rules
 .PHONY: package build release proj sim regs style style-fix tool-check clean all
@@ -79,10 +68,11 @@ JOBS ?= 16
 all:
 	$(MAKE) tool-check
 	@{ \
-	for board in $(BOARD_LIST); do \
-		$(MAKE) proj BOARD=$${board} JOBS=$(JOBS); \
-		$(MAKE) build BOARD=$${board} JOBS=$(JOBS); \
-		$(MAKE) package BOARD=$${board} JOBS=$(JOBS); \
+	for brd in $(BOARD_LIST); do \
+		echo "INFO: Building board $$brd..."; \
+		$(MAKE) proj BOARD=$$brd; \
+		$(MAKE) build BOARD=$$brd; \
+		$(MAKE) package BOARD=$$brd; \
 	done; \
 	}
 
@@ -103,9 +93,7 @@ package: regs
 build: regs
 	cd scripts && vivado -mode batch -nojournal -nolog -notrace \
 	-source build.tcl \
-	-tclargs $(PROJECT_NAME) $(BOARD) \
-	$(VER_MAJOR) $(VER_MINOR) $(VER_PATCH) \
-	$(JOBS)
+	-tclargs $(PROJECT_NAME) $(BOARD) $(PROJECT_VERSION) $(JOBS)
 
 # Create the FPGA Vivado project
 proj: regs
@@ -149,7 +137,7 @@ release:
 	@echo "New tag : $(VER_STRING)"
 	@echo
 	@echo "NOTICE: If the value for the new tag is unacceptable, then the tag"
-	@echo "may be changed by modifying the VER_* Makefile variables."
+	@echo "may be changed by modifying the PROJECT_VERSION Makefile variable."
 	@echo
 	@echo "NOTICE: Before proceeding, don't forget to update CHANGELOG.md with the"
 	@echo "details of this release."
