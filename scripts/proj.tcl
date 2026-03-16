@@ -40,7 +40,7 @@ foreach tclfile $SRC_IP {
 set_property target_language VHDL [current_project]
 set_property simulator_language Mixed [current_project]
 set_property enable_vhdl_2008 1 [current_project]
-set_property file_type {VHDL 2008} [get_files -filter {FILE_TYPE == VHDL}]
+set_property file_type {VHDL 2019} [get_files -filter {FILE_TYPE == VHDL}]
 set_property top $FPGA_TOP [current_fileset]
 update_compile_order -fileset sources_1
 

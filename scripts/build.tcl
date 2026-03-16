@@ -313,19 +313,22 @@ if {$CHECK_CDC} {
 set bit_file ${impl_dir}/${top_entity}.bit
 file copy -force $bit_file ${release_dir}/${build_name}.bit
 
-# # Generate the flash configuration file
-# set mcs_file ${impl_dir}/${top_entity}.mcs
-# write_cfgmem -force -format mcs -size 256 -interface SPIx4 -loadbit "up 0x0 $bit_file" -file $mcs_file
-# file copy -force $mcs_file ${release_dir}/${build_name}.mcs
+if {$WRITE_MCS} {
+  # Generate the flash configuration file
+  set mcs_file ${impl_dir}/${top_entity}.mcs
+  write_cfgmem -force -format mcs -size $MCS_SIZE_MBYTES -interface SPIx4 -loadbit "up 0x0 $bit_file" -file $mcs_file
+  file copy -force $mcs_file ${release_dir}/${build_name}.mcs
+}
 
-# Generate the xsa
-write_hw_platform -force -fixed -include_bit -file ${release_dir}/${build_name}.xsa
+if {$WRITE_XSA} {
+  # Generate the xsa
+  write_hw_platform -force -fixed -include_bit -file ${release_dir}/${build_name}.xsa
+  # Save BRAM layout in case we want to inject init data into it post-build
+  write_mem_info -force -quiet -file ${release_dir}/${build_name}.mmi
+}
 
 # Generate debug probes
 write_debug_probes -force ${release_dir}/${build_name}.ltx
-
-# Save BRAM layout in case we want to inject init data into it post-build
-write_mem_info -force -quiet -file ${release_dir}/${build_name}.mmi
 
 
 # Stop build script timer and generate a build report

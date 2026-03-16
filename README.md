@@ -12,10 +12,10 @@ This repository is hosted on [GitHub](https://github.com/shrikebyte/template_fpg
 
 ### Install Project Tools
 
-- Vivado 2024.2
+- Vivado 2025.2
 - HDL Registers 8.1.0
 - VHDL Style Guide 3.35.0
-- VUnit 5.0.0.dev7
+- VUnit 5.0.0.dev8
 - NVC latest
 
 #### Install Vivado

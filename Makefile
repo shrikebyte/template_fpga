@@ -18,10 +18,10 @@ PROJECT_VERSION := 0.1.1
 BOARD ?= basys3
 
 # Required build tool versions
-REQUIRE_VIVADO_VER := v2024.2
+REQUIRE_VIVADO_VER := v2025.2
 REQUIRE_REGS_VER   := 8.1.0
 REQUIRE_VSG_VER    := 3.35.0
-REQUIRE_VUNIT_VER  := 5.0.0.dev7
+REQUIRE_VUNIT_VER  := 5.0.0.dev8
 
 
 ################################################################################

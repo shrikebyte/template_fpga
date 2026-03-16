@@ -8,6 +8,8 @@ All notable changes to this project will be documented in this file.
 
 - Bump Python tool versions.
 - Bump sblib library version.
+- Bump vivado version.
+- Change VHDL version from 2008 to 2019
 - Replace board.mk with board.tcl. This makes it cleaner to add board-specific build script customizations.
 - Rename platforms directory to boards directory.
 - Rename tools directory to scripts directory.
