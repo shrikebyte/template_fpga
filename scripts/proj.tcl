@@ -27,14 +27,18 @@ create_project -force ${proj_name}_${board_name} $proj_dir -part $FPGA_PART
 add_files -fileset sources_1 $SRC_HDL
 add_files -fileset constrs_1 $SRC_CNSTR
 
-foreach cnstrfile $SRC_CNSTR_SCOPED {
-  set refname [file tail $cnstrfile]
-  set refname [file rootname $refname]
-  read_xdc -unmanaged -ref $refname $cnstrfile
+if {[info exists SRC_CNSTR_SCOPED]} {
+  foreach cnstrfile $SRC_CNSTR_SCOPED {
+    set refname [file tail $cnstrfile]
+    set refname [file rootname $refname]
+    read_xdc -unmanaged -ref $refname $cnstrfile
+  }
 }
 
-foreach tclfile $SRC_IP {
-  source $tclfile
+if {[info exists SRC_IP]} {
+  foreach tclfile $SRC_IP {
+    source $tclfile
+  }
 }
 
 set_property target_language VHDL [current_project]

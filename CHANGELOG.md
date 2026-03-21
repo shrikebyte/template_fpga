@@ -17,6 +17,8 @@ All notable changes to this project will be documented in this file.
 - Improve build scripts to add more options hooks.
 - Update CI script to fix a python build bug related to VUnit. This should only be a temporary fix until the next version of VUnit is released. See this [Github issue](https://github.com/VUnit/vunit/issues/1158) for further details.
 - Update CI script to use NVC instead of GHDL.
+- Add XSA / MCS generation selection options to build scripts.
+- Fix a build script bug that prevented the script from exiting if there was a timing violation.
 
 ## [0.1.0] - 2025-10-17
 

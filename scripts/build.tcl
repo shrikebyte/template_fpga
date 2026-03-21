@@ -148,7 +148,7 @@ proc parse_version {version_string} {
 
 if { $argc != 4 } {
   puts "ERROR: Script usage - build.tcl <project_name> <board_name> <project_version> <jobs>"
-  exit
+  exit 1
 }
 set proj_name [lindex $argv 0]
 set board_name [lindex $argv 1]
@@ -298,12 +298,11 @@ if {$CHECK_CDC} {
     puts "ERROR: Critical CDC rule violation after implementation run. See ${release_dir}/${build_name}_cdc.rpt"
     set should_exit 1
   }
-
-  if {${should_exit} eq 1} {
-    exit 1
-  }
 }
 
+if {${should_exit} eq 1} {
+  exit 1
+}
 
 ################################################################################
 # Generate secondary output products if build was error-free
