@@ -13,22 +13,13 @@ This repository is hosted on [GitHub](https://github.com/shrikebyte/template_fpg
 ### Install Project Tools
 
 - Vivado 2025.2
-- HDL Registers 8.1.0
-- VHDL Style Guide 3.35.0
-- VUnit 5.0.0.dev8
-- NVC latest
+- Python
 
 #### Install Vivado
 
 Vivado can be [downloaded here](https://www.xilinx.com/support/download.html).
 
 For detailed instructions, including hardware and OS requirements, see [Xilinx UG973](https://docs.amd.com/r/en-US/ug973-vivado-release-notes-install-license).
-
-#### Install Python Tools
-
-Assuming a relatively recent version of python3 and pip3 are already available on the system, run the following command to install the python tools. Optionally, you may want to use a python virtual environment.
-
-`python -m pip install hdl_registers==8.1.0 vsg==3.35.0 vunit_hdl==5.0.0.dev7`
 
 #### Install NVC
 
@@ -42,15 +33,7 @@ Alternatively, a pre-compiled release can be downloaded from [Github](https://gi
 
 ### Test
 
-Walk through the following steps to run the simulations.
-
-1. Ensure the required build tools have been properly installed and made available on the system's command line.
-
-   `make tool-check`
-
-2. Run the simulations. By default, this will use all CPU cores to run multiple sims in parallel.
-
-   `make sim`
+`make sim`
 
 ## Release Process
 

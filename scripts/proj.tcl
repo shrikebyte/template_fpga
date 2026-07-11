@@ -17,7 +17,7 @@ set board_dir [file normalize ${root_dir}/boards/${board_name}]
 set proj_dir [file normalize ${root_dir}/build/vivado_out/${proj_name}_${board_name}]
 
 if {![file exists $board_dir/board.tcl]} {
-  puts "ERROR: Board configuration not found: $board_dir/board.tcl"
+  puts stderr "ERROR: Board configuration not found: $board_dir/board.tcl"
   exit 1
 }
 source $board_dir/board.tcl
@@ -37,7 +37,12 @@ if {[info exists SRC_CNSTR_SCOPED]} {
 
 if {[info exists SRC_IP]} {
   foreach tclfile $SRC_IP {
-    source $tclfile
+    if {[catch {source $tclfile} error_msg]} {
+      puts stderr "ERROR: Script $tclfile failed"
+      catch {close_project}
+      catch {file delete -force $proj_dir}
+      exit 1
+    }
   }
 }
 

@@ -1,9 +1,8 @@
 --##############################################################################
 --# File : basys3_bd.vhd
 --# Auth : David Gussler
---# Lang : VHDL'08
 --# ============================================================================
---! Manually maintained block design wrapper
+--# Manually maintained block design wrapper
 --##############################################################################
 
 library ieee;

@@ -72,42 +72,6 @@ proc getGitHash {} {
   return [ list $git_dirty $git_hash ]
 }
 
-# Figure out if this build has been initiated from a local engineer's PC or
-# from a CI server
-proc getLocalBuildStatus {} {
-
-  if { [info exists ::env(CI)] } {
-    set local_build 0
-    puts "#########################################################################"
-    puts "## INFO: This is a CI build"
-    puts "#########################################################################"
-  } else {
-    set local_build 1
-    puts "#########################################################################"
-    puts "## INFO: This is a local build"
-    puts "#########################################################################"
-  }
-  return $local_build
-}
-
-# Figure out if this is a release or development build. The CI server should set
-# this env variable when a new tag is committed.
-proc getDevBuildStatus {} {
-
-  if { [info exists ::env(FPGA_RELEASE_BUILD)] } {
-    set dev_build 0
-    puts "#########################################################################"
-    puts "## INFO: This is an official release build"
-    puts "#########################################################################"
-  } else {
-    set dev_build 1
-    puts "#########################################################################"
-    puts "## INFO: This is a development build"
-    puts "#########################################################################"
-  }
-  return $dev_build
-}
-
 # Print the last N lines of a file
 proc tail {filename {num_lines 20}} {
   set fp [open $filename r]
@@ -164,8 +128,6 @@ set build_time [lindex $build_date_time 1]
 set git_dirty_hash [getGitHash]
 set git_dirty [lindex $git_dirty_hash 0]
 set git_hash [lindex $git_dirty_hash 1]
-set local_build [getLocalBuildStatus]
-set dev_build [getDevBuildStatus]
 set proj_dir [file normalize ${root_dir}/build/vivado_out/${proj_name}_${board_name}]
 set board_dir [file normalize ${root_dir}/boards/${board_name}]
 set ver_info [parse_version $proj_ver]
@@ -207,8 +169,6 @@ set_property generic " \
   G_VER_MAJOR=$ver_major \
   G_VER_MINOR=$ver_minor \
   G_VER_PATCH=$ver_patch \
-  G_LOCAL_BUILD=1'b$local_build \
-  G_DEV_BUILD=1'b$dev_build \
   G_GIT_DIRTY=1'b$git_dirty \
   G_GIT_HASH=32'h$git_hash \
   G_BUILD_DATE=32'h$build_date \
@@ -347,8 +307,6 @@ set build_info [list \
   "Build Timer \[hh:mm:ss\]   : ${build_time_hrs}:${build_time_min}:${build_time_sec}" \
   "Build Date \[yyyymmdd\]    : $build_date" \
   "Build Time \[hhmmss\]      : $build_time" \
-  "Local Build (Not CI)     : $local_build" \
-  "Development Build        : $dev_build" \
   "Git Dirty                : $git_dirty" \
   "Git Hash                 : $git_hash" \
 ]

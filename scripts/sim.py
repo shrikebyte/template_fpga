@@ -70,16 +70,10 @@ vu.add_verification_components()
 lib = vu.add_library("lib")
 lib.add_source_files(ROOT_DIR / "src" / "**" / "hdl" / "*.vhd", allow_empty=True)
 lib.add_source_files(ROOT_DIR / "src" / "**" / "sim" / "*.vhd", allow_empty=True)
-lib.add_source_files(
-    ROOT_DIR / "lib" / "**" / "src" / "**" / "hdl" / "*.vhd", allow_empty=True
-)
-lib.add_source_files(
-    ROOT_DIR / "lib" / "**" / "src" / "**" / "sim" / "*.vhd", allow_empty=True
-)
+lib.add_source_files(ROOT_DIR / "lib" / "sblib" / "src" / "**" / "hdl" / "*.vhd", allow_empty=True)
+lib.add_source_files(ROOT_DIR / "lib" / "sblib" / "src" / "**" / "sim" / "*.vhd", allow_empty=True)
 lib.add_source_files(ROOT_DIR / "test" / "**" / "*.vhd", allow_empty=True)
-lib.add_source_files(
-    ROOT_DIR / "build" / "regs_out" / "**" / "hdl" / "*.vhd", allow_empty=True
-)
+lib.add_source_files(ROOT_DIR / "build" / "regs_out" / "**" / "hdl" / "*.vhd", allow_empty=True)
 
 if GENERATE_VHDL_LS_TOML:
     lib.add_source_files(ROOT_DIR / "boards" / "**" / "hdl" / "*.vhd", allow_empty=True)
@@ -112,7 +106,6 @@ if GENERATE_VHDL_LS_TOML:
 
     from create_vhdl_ls_config import create_configuration
 
-    create_configuration(output_path=Path(".."), vunit_proj=vu)
     create_configuration(output_path=Path(".."), vunit_proj=vu)
     exit(0)
 

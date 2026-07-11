@@ -3,7 +3,7 @@
 --# Auth : David Gussler
 --# Lang : VHDL'08
 --# ============================================================================
---! Top level fpga
+--# Top level fpga
 --##############################################################################
 
 library ieee;
@@ -17,8 +17,6 @@ entity zu5ev_fpga is
     G_VER_MAJOR   : integer range 0 to 255        := 255;
     G_VER_MINOR   : integer range 0 to 255        := 255;
     G_VER_PATCH   : integer range 0 to 255        := 255;
-    G_LOCAL_BUILD : boolean                       := true;
-    G_DEV_BUILD   : boolean                       := true;
     G_GIT_DIRTY   : boolean                       := true;
     G_GIT_HASH    : std_logic_vector(31 downto 0) := x"DEAD_BEEF";
     G_BUILD_DATE  : std_logic_vector(31 downto 0) := x"DEAD_BEEF";
@@ -81,8 +79,8 @@ begin
     G_VER_MAJOR   => G_VER_MAJOR,
     G_VER_MINOR   => G_VER_MINOR,
     G_VER_PATCH   => G_VER_PATCH,
-    G_LOCAL_BUILD => G_LOCAL_BUILD,
-    G_DEV_BUILD   => G_DEV_BUILD,
+    G_LOCAL_BUILD => false,
+    G_DEV_BUILD   => false,
     G_BUILD_DATE  => G_BUILD_DATE,
     G_BUILD_TIME  => G_BUILD_TIME,
     G_GIT_HASH    => G_GIT_HASH,
