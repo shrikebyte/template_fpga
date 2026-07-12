@@ -11,7 +11,7 @@ set FPGA_ID "00000007"
 set SYNTH_STRATEGY "Vivado Synthesis Defaults"
 set IMPL_STRATEGY "Vivado Implementation Defaults"
 set CHECK_TIMING true
-set CHECK_CDC false
+set CHECK_CDC true
 set WRITE_XSA true
 set WRITE_MCS false
 set MCS_SIZE_MBYTES 64
@@ -21,8 +21,9 @@ set SRC_HDL [glob \
   $root_dir/extern/sblib/src/util/hdl/util_pkg.vhd \
   $root_dir/extern/sblib/src/cdc/hdl/cdc_bit.vhd \
   $root_dir/extern/sblib/src/hdlm/hdl/* \
-  $root_dir/extern/sblib/src/bus/hdl/axil_arbiter.vhd \
-  $root_dir/extern/sblib/src/bus/hdl/axil_decoder.vhd \
+  $root_dir/extern/sblib/src/bus/hdl/bus_pkg.vhd \
+  $root_dir/extern/sblib/src/bus/hdl/axil_arb.vhd \
+  $root_dir/extern/sblib/src/bus/hdl/axil_dec.vhd \
   $root_dir/extern/sblib/src/bus/hdl/axil_xbar.vhd \
   $root_dir/extern/sblib/src/stdver/hdl/* \
   $root_dir/build/regs_out/stdver/hdl/* \

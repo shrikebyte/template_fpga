@@ -35,12 +35,13 @@ VENV_DIR = $(THIS_DIR).venv
 BOARD_LIST := $(notdir $(wildcard boards/*))
 VER_STRING := v$(PROJECT_VERSION)
 BUILD_NAME := $(PROJECT_NAME)_$(VER_STRING)-$(BOARD)
-RELEASE_DIR := $(BUILD_DIR)/$(BUILD_NAME)
 REGS_SRC := $(wildcard $(SRC_DIR)/*/regs/*.toml)
 STYLE_SRC := $(wildcard $(SRC_DIR)/*/hdl/*.vhd $(BOARD_DIR)/*/hdl/*.vhd $(TEST_DIR)/*/*.vhd)
 PYTHON := $(VENV_DIR)/bin/python
 PIP := $(VENV_DIR)/bin/pip
 VSG := $(VENV_DIR)/bin/vsg
+PACKAGE_FILE := $(BUILD_DIR)/$(BUILD_NAME).tar.gz
+BUILD_FILE := $(BUILD_DIR)/$(BUILD_NAME)/$(BUILD_NAME)_build_info.rpt
 XPR_FILE := $(BUILD_DIR)/vivado_out/$(PROJECT_NAME)_$(BOARD)/$(PROJECT_NAME)_$(BOARD).xpr
 REGS_STAMP := $(BUILD_DIR)/regs_out/.regs_stamp
 VENV_STAMP := $(VENV_DIR)/.venv_stamp
@@ -63,22 +64,23 @@ endef
 # Phony rules
 .PHONY: package build release proj sim regs style style-fix tool-check clean all
 
+# Package the built files
+package: $(PACKAGE_FILE)
+$(PACKAGE_FILE): $(BUILD_FILE)
+	cd $(BUILD_DIR) && tar -czvf $(BUILD_NAME).tar.gz $(BUILD_NAME)
+
 # Run the complete build procedure for ALL boards
 all:
 	@{ \
 	for brd in $(BOARD_LIST); do \
 		echo "INFO: Building board $$brd..."; \
-		$(MAKE) build BOARD=$$brd; \
 		$(MAKE) package BOARD=$$brd; \
 	done; \
 	}
 
-# Package the built files
-package:
-	cd $(BUILD_DIR) && tar -czvf $(BUILD_NAME).tar.gz $(BUILD_NAME)
-
 # Build the FPGA with Vivado
-build: $(REGS_STAMP) $(XPR_FILE)
+build: $(BUILD_FILE)
+$(BUILD_FILE): $(XPR_FILE)
 	$(call check_vivado)
 	cd scripts && $(VIVADO) -mode batch -nojournal -nolog -notrace \
 	-source build.tcl \
@@ -86,7 +88,7 @@ build: $(REGS_STAMP) $(XPR_FILE)
 
 # Create the FPGA Vivado project
 proj: $(XPR_FILE)
-$(XPR_FILE): $(REGS_STAMP)
+$(XPR_FILE): $(REGS_STAMP) $(BOARD_DIR)/$(BOARD)/board.tcl
 	$(call check_vivado)
 	cd scripts && $(VIVADO) -mode batch -nojournal -nolog -notrace \
 	-source proj.tcl \
