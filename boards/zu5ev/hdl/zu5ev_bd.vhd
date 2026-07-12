@@ -2,7 +2,11 @@
 --# File : zu5ev_bd.vhd
 --# Auth : David Gussler
 --# ============================================================================
---# Manually maintained block design wrapper
+--# Shrikebyte FPGA Template - https://github.com/shrikebyte/template_fpga
+--# Copyright (C) Shrikebyte, LLC
+--# Licensed under the Apache 2.0 license, see LICENSE for details.
+--# ============================================================================
+--# Block design wrapper
 --##############################################################################
 
 library ieee;

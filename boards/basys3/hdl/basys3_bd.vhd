@@ -2,12 +2,15 @@
 --# File : basys3_bd.vhd
 --# Auth : David Gussler
 --# ============================================================================
---# Manually maintained block design wrapper
+--# Shrikebyte FPGA Template - https://github.com/shrikebyte/template_fpga
+--# Copyright (C) Shrikebyte, LLC
+--# Licensed under the Apache 2.0 license, see LICENSE for details.
+--# ============================================================================
+--# Block design wrapper
 --##############################################################################
 
 library ieee;
 use ieee.std_logic_1164.all;
-use work.util_pkg.all;
 use work.bus_pkg.all;
 
 entity basys3_bd is

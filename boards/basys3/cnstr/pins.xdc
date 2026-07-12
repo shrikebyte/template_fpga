@@ -1,3 +1,13 @@
+################################################################################
+# File : pins.xdc
+# Auth : David Gussler
+# ==============================================================================
+# Shrikebyte FPGA Template - https://github.com/shrikebyte/template_fpga
+# Copyright (C) Shrikebyte, LLC
+# Licensed under the Apache 2.0 license, see LICENSE for details.
+# ==============================================================================
+# Pin constraints
+################################################################################
 
 set_property -dict { PACKAGE_PIN W5    IOSTANDARD LVCMOS33 } [get_ports { i_fpga_clk_100m }];
 set_property -dict { PACKAGE_PIN U18   IOSTANDARD LVCMOS33 } [get_ports { i_fpga_arst     }];

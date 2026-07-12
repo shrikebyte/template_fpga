@@ -37,6 +37,7 @@ VER_STRING := v$(PROJECT_VERSION)
 BUILD_NAME := $(PROJECT_NAME)_$(VER_STRING)-$(BOARD)
 REGS_SRC := $(wildcard $(SRC_DIR)/*/regs/*.toml)
 STYLE_SRC := $(wildcard $(SRC_DIR)/*/hdl/*.vhd $(BOARD_DIR)/*/hdl/*.vhd $(TEST_DIR)/*/*.vhd)
+VIVADO_SRC := $(wildcard $(SRC_DIR)/*/* $(BOARD_DIR)/$(BOARD)/* $(BOARD_DIR)/$(BOARD)/*/*)
 PYTHON := $(VENV_DIR)/bin/python
 PIP := $(VENV_DIR)/bin/pip
 VSG := $(VENV_DIR)/bin/vsg
@@ -88,7 +89,7 @@ $(BUILD_FILE): $(XPR_FILE)
 
 # Create the FPGA Vivado project
 proj: $(XPR_FILE)
-$(XPR_FILE): $(REGS_STAMP) $(BOARD_DIR)/$(BOARD)/board.tcl
+$(XPR_FILE): $(REGS_STAMP) $(VIVADO_SRC)
 	$(call check_vivado)
 	cd scripts && $(VIVADO) -mode batch -nojournal -nolog -notrace \
 	-source proj.tcl \

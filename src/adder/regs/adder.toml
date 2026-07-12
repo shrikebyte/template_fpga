@@ -4,44 +4,45 @@
 # Lang : HDL-Registers TOML
 #        https://hdl-registers.com/rst/user_guide/getting_started.html
 # ==============================================================================
-# Registers for the adder
+# Shrikebyte FPGA Template - https://github.com/shrikebyte/template_fpga
+# Copyright (C) Shrikebyte, LLC
+# Licensed under the Apache 2.0 license, see LICENSE for details.
+# ==============================================================================
+# Registers for the adder example
 ################################################################################
 
 
 ################################################################################
 [a]
+description = "Operand A."
 mode = "r_w"
-description = "Operand a."
 
-[a.data]
-type = "bit_vector"
-width = 32
-description = """
-Operand a.
+data.type = "bit_vector"
+data.width = 32
+data.description = """
+Operand A.
 """
 
 
 ################################################################################
 [b]
+description = "Operand B."
 mode = "r_w"
-description = "Operand b."
 
-[b.data]
-type = "bit_vector"
-width = 32
-description = """
-Operand b.
+data.type = "bit_vector"
+data.width = 32
+data.description = """
+Operand B.
 """
 
 
 ################################################################################
 [c]
+description = "Result C."
 mode = "r"
-description = "Result c."
 
-[c.data]
-type = "bit_vector"
-width = 32
-description = """
-Result c.
+data.type = "bit_vector"
+data.width = 32
+data.description = """
+Result C.
 """
