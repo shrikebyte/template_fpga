@@ -1,0 +1,4 @@
+# Use this file to specify remote git dependencies
+
+# Directory   URL                                       Tag
+sblib         https://github.com/shrikebyte/sblib.git   v0.2.0

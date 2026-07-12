@@ -1,7 +1,6 @@
 ################################################################################
-# File     : Makefile
-# Author   : David Gussler
-# Language : gnu make
+# File : Makefile
+# Auth : David Gussler
 # ==============================================================================
 # Project maintenance
 ################################################################################
@@ -11,9 +10,8 @@
 # Project Settings
 ################################################################################
 PROJECT_NAME := template
-PROJECT_VERSION := 0.1.1
-REQUIRE_VIVADO_VER := v2025.2
-SBLIB_VER := 0.2.0
+PROJECT_VERSION := 0.2.0
+VIVADO_VER := v2025.2
 
 
 ################################################################################
@@ -26,27 +24,27 @@ JOBS ?= 2
 VIVADO ?= $(shell which vivado 2>/dev/null)
 
 # Constants
-SBLIB_URL := https://github.com/shrikebyte/sblib.git
 THIS_DIR := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
 SRC_DIR := $(THIS_DIR)src
 TEST_DIR := $(THIS_DIR)test
 BUILD_DIR := $(THIS_DIR)build
 DOC_DIR := $(THIS_DIR)doc
-LIB_DIR := $(THIS_DIR)lib
+EXTERN_DIR := $(THIS_DIR)extern
 BOARD_DIR := $(THIS_DIR)boards
-VENV_DIR = $(THIS_DIR).build_venv
+VENV_DIR = $(THIS_DIR).venv
 BOARD_LIST := $(notdir $(wildcard boards/*))
 VER_STRING := v$(PROJECT_VERSION)
 BUILD_NAME := $(PROJECT_NAME)_$(VER_STRING)-$(BOARD)
 RELEASE_DIR := $(BUILD_DIR)/$(BUILD_NAME)
-REGS_SRC := $(SRC_DIR)/*/regs/*.toml $(LIB_DIR)/sblib/src/*/regs/*.toml
-STYLE_SRC := $(SRC_DIR)/*/hdl/*.vhd $(BOARD_DIR)/*/hdl/*.vhd $(TEST_DIR)/*/*.vhd
+REGS_SRC := $(wildcard $(SRC_DIR)/*/regs/*.toml)
+STYLE_SRC := $(wildcard $(SRC_DIR)/*/hdl/*.vhd $(BOARD_DIR)/*/hdl/*.vhd $(TEST_DIR)/*/*.vhd)
 PYTHON := $(VENV_DIR)/bin/python
 PIP := $(VENV_DIR)/bin/pip
 VSG := $(VENV_DIR)/bin/vsg
 XPR_FILE := $(BUILD_DIR)/vivado_out/$(PROJECT_NAME)_$(BOARD)/$(PROJECT_NAME)_$(BOARD).xpr
-REGS_STAMP := $(BUILD_DIR)/.regs_stamp
-VENV_STAMP := $(BUILD_DIR)/.venv_stamp
+REGS_STAMP := $(BUILD_DIR)/regs_out/.regs_stamp
+VENV_STAMP := $(VENV_DIR)/.venv_stamp
+EXTERN_STAMP := $(EXTERN_DIR)/.extern_stamp
 
 # Check the Vivado version
 define check_vivado
@@ -55,21 +53,9 @@ define check_vivado
 		exit 1; \
 	fi; \
 	v=$$($(VIVADO) -version | awk '/vivado/ {print $$2; exit}'); \
-	if [ "$$v" != "$(REQUIRE_VIVADO_VER)" ]; then \
-		echo "ERROR: Requires Vivado $(REQUIRE_VIVADO_VER) (found $$v)"; \
+	if [ "$$v" != "$(VIVADO_VER)" ]; then \
+		echo "ERROR: Requires Vivado $(VIVADO_VER) (found $$v)"; \
 		exit 1; \
-	fi
-endef
-
-# Clone dependent repo
-define fetch_sblib
-	@if [ ! -d "$(LIB_DIR)" ]; then \
-		echo "Fetching shared library at $(SBLIB_VER)..."; \
-		git clone --depth 1 --branch $(SBLIB_VER) $(SBLIB_URL) $(LIB_DIR); \
-	elif [ "$$(cd $(LIB_DIR) && git describe --tags --always)" != "$(SBLIB_VER)" ]; then \
-		echo "Library version mismatch! Wiping and fetching $(SBLIB_VER)..."; \
-		rm -rf $(LIB_DIR); \
-		git clone --depth 1 --branch $(SBLIB_VER) $(SBLIB_URL) $(LIB_DIR); \
 	fi
 endef
 
@@ -101,6 +87,7 @@ build: $(REGS_STAMP) $(XPR_FILE)
 # Create the FPGA Vivado project
 proj: $(XPR_FILE)
 $(XPR_FILE): $(REGS_STAMP)
+	$(call check_vivado)
 	cd scripts && $(VIVADO) -mode batch -nojournal -nolog -notrace \
 	-source proj.tcl \
 	-tclargs $(PROJECT_NAME) $(BOARD)
@@ -128,16 +115,31 @@ style-fix: $(VENV_STAMP) $(STYLE_SRC)
 	--fix
 
 # Generate register output products
-$(REGS_STAMP): $(VENV_STAMP) $(REGS_SRC)
-	cd scripts && $(PYTHON) regs.py $(REGS_SRC)
+$(REGS_STAMP): $(VENV_STAMP) $(EXTERN_STAMP) $(REGS_SRC)
+	cd scripts && $(PYTHON) regs.py $(REGS_SRC) $(EXTERN_DIR)/sblib/src/*/regs/*.toml
 	touch $(REGS_STAMP)
 
 # Install venv and python packages
-$(VENV_STAMP): build-requirements.txt
+$(VENV_STAMP): python-requirements.txt
 	test -d $(VENV_DIR) || python3 -m venv $(VENV_DIR)
 	$(PIP) install --upgrade pip
-	$(PIP) install -r build-requirements.txt
+	$(PIP) install -r python-requirements.txt
 	touch $(VENV_STAMP)
+
+# Fetch external depedency repo(s)
+$(EXTERN_STAMP): extern-requirements.txt
+	@mkdir -p $(EXTERN_DIR)
+	@while read -r name url tag || [ -n "$$name" ]; do \
+		case "$$name" in \
+			\#*|"") continue ;; \
+		esac; \
+		echo "Tracking dependency: $$name [$$tag]..."; \
+		if [ ! -d "$(EXTERN_DIR)/$$name" ]; then \
+			git clone $$url $(EXTERN_DIR)/$$name || exit 1; \
+		fi; \
+		(cd $(EXTERN_DIR)/$$name && git fetch --tags -q && git checkout -q $$tag) || exit 1; \
+	done < extern-requirements.txt
+	touch $(EXTERN_STAMP)
 
 # Create a new git tag and Github release for this version of the code. A Github
 # action will generate the release from source.
@@ -164,4 +166,4 @@ release:
 	git push origin $(VER_STRING)
 
 clean:
-	rm -rf $(BUILD_DIR) $(VENV_DIR) scripts/__pycache__ scripts/vunit_out
+	rm -rf $(BUILD_DIR) scripts/__pycache__ scripts/vunit_out

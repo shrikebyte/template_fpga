@@ -1,24 +1,23 @@
 --##############################################################################
 --# File : adder.vhd
 --# Auth : David Gussler
---# Lang : VHDL'08
 --# ============================================================================
---! Signed adder example
+--# Signed adder example
 --##############################################################################
 
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use work.util_pkg.all;
+use work.bus_pkg.all;
 use work.adder_regs_pkg.all;
 use work.adder_register_record_pkg.all;
 
 entity adder is
   port (
-    clk        : in    std_logic;
-    srst       : in    std_logic;
-    s_axil_req : in    axil_req_t;
-    s_axil_rsp : out   axil_rsp_t
+    clk    : in    std_logic;
+    srst   : in    std_logic;
+    s_axil : view  s_axil_view
   );
 end entity;
 
@@ -38,8 +37,7 @@ begin
   port map (
     clk             => clk,
     reset           => srst,
-    s_axil_req      => s_axil_req,
-    s_axil_rsp      => s_axil_rsp,
+    s_axil          => s_axil,
     regs_up         => i,
     regs_down       => o,
     reg_was_read    => r,

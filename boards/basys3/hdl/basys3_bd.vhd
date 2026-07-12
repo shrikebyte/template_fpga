@@ -7,18 +7,15 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
-
--- library unisim;
--- use unisim.vcomponents.all;
 use work.util_pkg.all;
+use work.bus_pkg.all;
 
 entity basys3_bd is
   port (
     clk_100m  : out   std_logic;
     srst_100m : out   std_logic;
     --
-    m_axil_req : out   axil_req_t;
-    m_axil_rsp : in    axil_rsp_t;
+    m_axil : view m_axil_view;
     --
     fpga_clk_100m : in    std_logic;
     fpga_arst     : in    std_logic;
@@ -66,25 +63,23 @@ begin
     clk_100m     => clk_100m,
     srst_100m(0) => srst_100m,
     --
-    m_axil_araddr  => m_axil_req.araddr,
-    m_axil_arprot  => m_axil_req.arprot,
-    m_axil_arready => m_axil_rsp.arready,
-    m_axil_arvalid => m_axil_req.arvalid,
-    m_axil_awaddr  => m_axil_req.awaddr,
-    m_axil_awprot  => m_axil_req.awprot,
-    m_axil_awready => m_axil_rsp.awready,
-    m_axil_awvalid => m_axil_req.awvalid,
-    m_axil_bready  => m_axil_req.bready,
-    m_axil_bresp   => m_axil_rsp.bresp,
-    m_axil_bvalid  => m_axil_rsp.bvalid,
-    m_axil_rdata   => m_axil_rsp.rdata,
-    m_axil_rready  => m_axil_req.rready,
-    m_axil_rresp   => m_axil_rsp.rresp,
-    m_axil_rvalid  => m_axil_rsp.rvalid,
-    m_axil_wdata   => m_axil_req.wdata,
-    m_axil_wready  => m_axil_rsp.wready,
-    m_axil_wstrb   => m_axil_req.wstrb,
-    m_axil_wvalid  => m_axil_req.wvalid,
+    m_axil_araddr  => m_axil.araddr,
+    m_axil_arready => m_axil.arready,
+    m_axil_arvalid => m_axil.arvalid,
+    m_axil_awaddr  => m_axil.awaddr,
+    m_axil_awready => m_axil.awready,
+    m_axil_awvalid => m_axil.awvalid,
+    m_axil_bready  => m_axil.bready,
+    m_axil_bresp   => m_axil.bresp,
+    m_axil_bvalid  => m_axil.bvalid,
+    m_axil_rdata   => m_axil.rdata,
+    m_axil_rready  => m_axil.rready,
+    m_axil_rresp   => m_axil.rresp,
+    m_axil_rvalid  => m_axil.rvalid,
+    m_axil_wdata   => m_axil.wdata,
+    m_axil_wready  => m_axil.wready,
+    m_axil_wstrb   => m_axil.wstrb,
+    m_axil_wvalid  => m_axil.wvalid,
     --
     fpga_clk_100m => fpga_clk_100m,
     fpga_arst     => fpga_arst,

@@ -1,14 +1,14 @@
 --##############################################################################
 --# File : adder_tb.vhd
 --# Auth : David Gussler
---# Lang : VHDL '08
 --# ============================================================================
---! Adder testbench
+--# Adder testbench
 --##############################################################################
 
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+use work.bus_pkg.all;
 
 library vunit_lib;
   context vunit_lib.vunit_context;
@@ -33,10 +33,12 @@ architecture tb of adder_tb is
   signal clk  : std_logic := '1';
   signal srst : std_logic := '1';
 
-  signal axil_req : axil_req_t;
-  signal axil_rsp : axil_rsp_t;
+  signal axil : bus_axil_t;
 
-  constant AXIM : bus_master_t := new_bus(data_length => AXIL_DATA_WIDTH, address_length => AXIL_ADDR_WIDTH);
+  constant AXIM : bus_master_t := new_bus(
+      data_length    => AXIL_DATA_WIDTH,
+      address_length => AXIL_ADDR_WIDTH
+    );
 
   function fn_addr (
     idx : natural
@@ -110,21 +112,19 @@ begin
   -- ---------------------------------------------------------------------------
   u_adder : entity work.adder
   port map (
-    clk        => clk,
-    srst       => srst,
-    s_axil_req => axil_req,
-    s_axil_rsp => axil_rsp
+    clk    => clk,
+    srst   => srst,
+    s_axil => axil
   );
 
   -- ---------------------------------------------------------------------------
-  u_axil_bfm : entity work.bfm_axil_man
+  u_bfm_axil_mgr : entity work.bfm_axil_mgr
   generic map (
     G_BUS_HANDLE => AXIM
   )
   port map (
-    clk        => clk,
-    m_axil_req => axil_req,
-    m_axil_rsp => axil_rsp
+    clk    => clk,
+    m_axil => axil
   );
 
 end architecture;

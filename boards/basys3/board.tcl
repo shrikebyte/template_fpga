@@ -18,13 +18,13 @@ set MCS_SIZE_MBYTES 64
 
 # HDL source files
 set SRC_HDL [glob \
-  $root_dir/lib/sblib/src/util/hdl/util_pkg.vhd \
-  $root_dir/lib/sblib/src/cdc/hdl/cdc_bit.vhd \
-  $root_dir/lib/sblib/src/hdlm/hdl/* \
-  $root_dir/lib/sblib/src/bus/hdl/axil_arbiter.vhd \
-  $root_dir/lib/sblib/src/bus/hdl/axil_decoder.vhd \
-  $root_dir/lib/sblib/src/bus/hdl/axil_xbar.vhd \
-  $root_dir/lib/sblib/src/stdver/hdl/* \
+  $root_dir/extern/sblib/src/util/hdl/util_pkg.vhd \
+  $root_dir/extern/sblib/src/cdc/hdl/cdc_bit.vhd \
+  $root_dir/extern/sblib/src/hdlm/hdl/* \
+  $root_dir/extern/sblib/src/bus/hdl/axil_arbiter.vhd \
+  $root_dir/extern/sblib/src/bus/hdl/axil_decoder.vhd \
+  $root_dir/extern/sblib/src/bus/hdl/axil_xbar.vhd \
+  $root_dir/extern/sblib/src/stdver/hdl/* \
   $root_dir/build/regs_out/stdver/hdl/* \
   $root_dir/build/regs_out/adder/hdl/* \
   $root_dir/src/adder/hdl/* \
@@ -39,7 +39,7 @@ set SRC_CNSTR [glob \
 # Scoped constraints. These constraints are only applied to modules that match
 # their file name. For example: cdc_bit.tcl is only applied to cdc_bit.vhd
 set SRC_CNSTR_SCOPED [glob \
-  $root_dir/lib/sblib/src/cdc/cnstr/cdc_bit.tcl \
+  $root_dir/extern/sblib/src/cdc/cnstr/cdc_bit.tcl \
 ]
 
 # IP sources. These should be tcl scripts for generating IPs or block designs.
