@@ -13,6 +13,7 @@
 PROJECT_NAME := template
 PROJECT_VERSION := 0.1.1
 REQUIRE_VIVADO_VER := v2025.2
+SBLIB_VER := 0.2.0
 
 
 ################################################################################
@@ -24,19 +25,8 @@ BOARD ?= basys3
 JOBS ?= 2
 VIVADO ?= $(shell which vivado 2>/dev/null)
 
-# Check the Vivado version
-define check_vivado
-	@if ! command -v $(VIVADO) >/dev/null 2>&1; then \
-		echo "ERROR: Vivado binary '$(VIVADO)' could not be found. Check your PATH or local.mk."; \
-		exit 1; \
-	fi; \
-	v=$$($(VIVADO) -version | awk '/vivado/ {print $$2; exit}'); \
-	if [ "$$v" != "$(REQUIRE_VIVADO_VER)" ]; then \
-		echo "ERROR: Requires Vivado $(REQUIRE_VIVADO_VER) (found $$v)"; \
-		exit 1; \
-	fi
-endef
-
+# Constants
+SBLIB_URL := https://github.com/shrikebyte/sblib.git
 THIS_DIR := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
 SRC_DIR := $(THIS_DIR)src
 TEST_DIR := $(THIS_DIR)test
@@ -55,6 +45,34 @@ PYTHON := $(VENV_DIR)/bin/python
 PIP := $(VENV_DIR)/bin/pip
 VSG := $(VENV_DIR)/bin/vsg
 XPR_FILE := $(BUILD_DIR)/vivado_out/$(PROJECT_NAME)_$(BOARD)/$(PROJECT_NAME)_$(BOARD).xpr
+REGS_STAMP := $(BUILD_DIR)/.regs_stamp
+VENV_STAMP := $(BUILD_DIR)/.venv_stamp
+
+# Check the Vivado version
+define check_vivado
+	@if ! command -v $(VIVADO) >/dev/null 2>&1; then \
+		echo "ERROR: Vivado binary '$(VIVADO)' could not be found. Check your PATH or local.mk."; \
+		exit 1; \
+	fi; \
+	v=$$($(VIVADO) -version | awk '/vivado/ {print $$2; exit}'); \
+	if [ "$$v" != "$(REQUIRE_VIVADO_VER)" ]; then \
+		echo "ERROR: Requires Vivado $(REQUIRE_VIVADO_VER) (found $$v)"; \
+		exit 1; \
+	fi
+endef
+
+# Clone dependent repo
+define fetch_sblib
+	@if [ ! -d "$(LIB_DIR)" ]; then \
+		echo "Fetching shared library at $(SBLIB_VER)..."; \
+		git clone --depth 1 --branch $(SBLIB_VER) $(SBLIB_URL) $(LIB_DIR); \
+	elif [ "$$(cd $(LIB_DIR) && git describe --tags --always)" != "$(SBLIB_VER)" ]; then \
+		echo "Library version mismatch! Wiping and fetching $(SBLIB_VER)..."; \
+		rm -rf $(LIB_DIR); \
+		git clone --depth 1 --branch $(SBLIB_VER) $(SBLIB_URL) $(LIB_DIR); \
+	fi
+endef
+
 
 # Phony rules
 .PHONY: package build release proj sim regs style style-fix tool-check clean all
@@ -74,7 +92,7 @@ package:
 	cd $(BUILD_DIR) && tar -czvf $(BUILD_NAME).tar.gz $(BUILD_NAME)
 
 # Build the FPGA with Vivado
-build: $(BUILD_DIR)/regs_out/.stamp $(XPR_FILE)
+build: $(REGS_STAMP) $(XPR_FILE)
 	$(call check_vivado)
 	cd scripts && $(VIVADO) -mode batch -nojournal -nolog -notrace \
 	-source build.tcl \
@@ -82,18 +100,18 @@ build: $(BUILD_DIR)/regs_out/.stamp $(XPR_FILE)
 
 # Create the FPGA Vivado project
 proj: $(XPR_FILE)
-$(XPR_FILE): $(BUILD_DIR)/regs_out/.stamp
+$(XPR_FILE): $(REGS_STAMP)
 	cd scripts && $(VIVADO) -mode batch -nojournal -nolog -notrace \
 	-source proj.tcl \
 	-tclargs $(PROJECT_NAME) $(BOARD)
 
 # Run the VUnit simulation
-sim: $(BUILD_DIR)/regs_out/.stamp
+sim: $(REGS_STAMP)
 	cd scripts && $(PYTHON) sim.py --vhdl_ls
 	cd scripts && $(PYTHON) sim.py --xunit-xml $(BUILD_DIR)/sim_report.xml
 
 # Check the coding style of the VHDL src files
-style: $(VENV_DIR)/.stamp $(STYLE_SRC)
+style: $(VENV_STAMP) $(STYLE_SRC)
 	mkdir -p $(BUILD_DIR)
 	$(VSG) -f $(STYLE_SRC) \
 	-c vsg_rules.yaml \
@@ -102,7 +120,7 @@ style: $(VENV_DIR)/.stamp $(STYLE_SRC)
 	--quality_report $(BUILD_DIR)/style_report.json
 
 # Check AND FIX the coding style of the VHDL src files
-style-fix: $(VENV_DIR)/.stamp $(STYLE_SRC)
+style-fix: $(VENV_STAMP) $(STYLE_SRC)
 	mkdir -p $(BUILD_DIR)
 	$(VSG) -f $(STYLE_SRC) \
 	-c vsg_rules.yaml \
@@ -110,16 +128,16 @@ style-fix: $(VENV_DIR)/.stamp $(STYLE_SRC)
 	--fix
 
 # Generate register output products
-$(BUILD_DIR)/regs_out/.stamp: $(VENV_DIR)/.stamp $(REGS_SRC)
+$(REGS_STAMP): $(VENV_STAMP) $(REGS_SRC)
 	cd scripts && $(PYTHON) regs.py $(REGS_SRC)
-	touch $(BUILD_DIR)/regs_out/.stamp
+	touch $(REGS_STAMP)
 
 # Install venv and python packages
-$(VENV_DIR)/.stamp: build-requirements.txt
+$(VENV_STAMP): build-requirements.txt
 	test -d $(VENV_DIR) || python3 -m venv $(VENV_DIR)
 	$(PIP) install --upgrade pip
 	$(PIP) install -r build-requirements.txt
-	touch $(VENV_DIR)/.stamp
+	touch $(VENV_STAMP)
 
 # Create a new git tag and Github release for this version of the code. A Github
 # action will generate the release from source.
